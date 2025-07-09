@@ -1,0 +1,51 @@
+/* Tailwind base setup */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 🌐 Global HTML & Body Fixes */
+html,
+body,
+#root {
+  height: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  background-color: #f9fafb; /* Light gray background */
+}
+
+/* 📦 Box-sizing normalization */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 🌟 Link Styling */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* 🦶 Footer Defaults */
+footer {
+  @apply bg-white border-t py-4 text-sm text-center text-gray-500;
+}
+
+/* 🎯 Button Base */
+button {
+  @apply rounded-md px-4 py-2 font-medium transition;
+}
+
+/* 🔘 CTA Button */
+.btn-primary {
+  @apply bg-indigo-600 text-white hover:bg-indigo-700;
+}
+
+/* 🧼 Reset common spacing for layout */
+section,
+header,
+footer {
+  @apply px-4 md:px-8;
+}

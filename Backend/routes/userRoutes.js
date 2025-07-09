@@ -1,10 +1,30 @@
 const express = require('express');
 const router = express.Router();
-const { createUser, getUser } = require('../Controllers/userController');
+const multer = require('multer');
+const path = require('path');
+const {
+  signup,
+  login,
+  updateUser,
+  getUserById,
+  getAllUsers
+} = require('../controllers/userController');
 
-// Define routes
-router.post('/users', createUser);
-router.get('/users/:userId', getUser);
+// Set up Multer for file uploads (e.g., resume)
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) =>
+    cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`)
+});
+const upload = multer({ storage });
+
+// 🟢 Public routes
+router.post('/signup', signup);
+router.post('/login', login);
+
+// 🔐 User profile routes
+router.put('/users/:id', upload.single('resume'), updateUser);
+router.get('/users/:id', getUserById);
+router.get('/users', getAllUsers);
 
 module.exports = router;
-

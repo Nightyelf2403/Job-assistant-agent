@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Reset full height for layout consistency */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #f9fafb; /* Light background */
+  color: #111827; /* Tailwind slate-900 */
+}
+
+/* Optional: smoother font rendering */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Anchor style */
+a {
+  @apply text-indigo-600 hover:text-indigo-800;
+}

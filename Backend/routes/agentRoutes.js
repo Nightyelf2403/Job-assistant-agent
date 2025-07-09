@@ -1,12 +1,16 @@
-
 const express = require('express');
+const upload = require('../middleware/upload');
+const {
+  generateAnswer,
+  analyzeResume,
+  submitFeedback
+} = require('../controllers/agentController');
+
 const router = express.Router();
-const { generateAnswer, analyzeResume } = require('../Controllers/agentController');
 
-// POST /api/generate/answer
+// AI Agent Endpoints
 router.post('/generate/answer', generateAnswer);
-
-// POST /api/resume/analyze
-router.post('/resume/analyze', analyzeResume);
+router.post('/resume/analyze', upload.single('resume'), analyzeResume);
+router.post('/feedback', submitFeedback); // Optional feedback
 
 module.exports = router;

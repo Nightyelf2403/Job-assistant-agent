@@ -1,58 +1,99 @@
 const axios = require('axios');
+const pdfParse = require('pdf-parse');
+const { PrismaClient } = require('@prisma/client');
 
-// POST /api/generate/answer
-const generateAnswer = async (req, res) => {
-  const { question, profile, jobDescription } = req.body;
+const prisma = new PrismaClient();
+
+exports.generateAnswer = async (req, res) => {
+  const { jobDescription, userProfile } = req.body;
+  if (!jobDescription || !userProfile) {
+    return res.status(400).json({ error: 'Missing job description or user profile' });
+  }
 
   const prompt = `
-You are an AI job application assistant. Given the user's profile and the job description, generate a personalized answer to the question below.
-
-User Profile:
-${profile}
+You are a helpful assistant that writes personalized answers to job application questions.
 
 Job Description:
 ${jobDescription}
 
-Question:
-${question}
+User Profile:
+${JSON.stringify(userProfile)}
 
-Answer:
+Generate a short, professional answer to: "Why are you a good fit for this role?"
+Respond ONLY in this JSON format:
+{
+  "answer": "<your generated answer>"
+}
 `;
 
   try {
     const response = await axios.post('http://localhost:11434/api/generate', {
       model: 'mistral',
       prompt,
-      stream: false,
+      stream: false
     });
 
-    res.json({ answer: response.data.response });
+    const json = JSON.parse(response.data.response);
+    res.json(json);
   } catch (err) {
-    console.error('Ollama error:', err.message);
-    res.status(500).json({ error: 'Failed to generate answer from Ollama' });
+    res.status(500).json({ error: 'Failed to generate answer' });
   }
 };
 
-// POST /api/resume/analyze
-const analyzeResume = async (req, res) => {
-  const { resume, jobDescription } = req.body;
+exports.analyzeResume = async (req, res) => {
+  const { jobDescription } = req.body;
+  const file = req.file;
+  if (!file || !jobDescription) {
+    return res.status(400).json({ error: 'Missing resume file or job description' });
+  }
 
-  // Mock logic for now
-  const score = Math.floor(Math.random() * 21) + 80; // 80-100
-  const suggestions = [
-    'Include more action verbs related to leadership.',
-    'Mention specific tools listed in the job description.',
-    'Highlight measurable achievements from past roles.',
-  ];
+  try {
+    const data = await pdfParse(file.buffer);
+    const prompt = `
+You are a resume scoring assistant.
 
-  res.json({
-    matchScore: score,
-    feedback: suggestions,
-  });
+Given the resume and job description below, provide:
+1. A match score from 0–100
+2. 3 short insights on how to improve
+
+Respond ONLY in this JSON format:
+{
+  "matchScore": <number>,
+  "insights": ["...", "...", "..."]
+}
+
+Resume:
+${data.text}
+
+Job Description:
+${jobDescription}
+`;
+
+    const response = await axios.post('http://localhost:11434/api/generate', {
+      model: 'mistral',
+      prompt,
+      stream: false
+    });
+
+    const json = JSON.parse(response.data.response);
+    res.json(json);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to analyze resume' });
+  }
 };
 
-module.exports = {
-  generateAnswer,
-  analyzeResume,
-};
+exports.submitFeedback = async (req, res) => {
+  const { answerId, rating, comment } = req.body;
+  if (!answerId || typeof rating !== 'number' || ![0, 1].includes(rating)) {
+    return res.status(400).json({ error: 'Invalid feedback format' });
+  }
 
+  try {
+    const feedback = await prisma.feedback.create({
+      data: { answerId, rating, comment }
+    });
+    res.status(201).json(feedback);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to store feedback' });
+  }
+};

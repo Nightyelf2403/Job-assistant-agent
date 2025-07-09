@@ -1,0 +1,144 @@
+.dashboard-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+  background: #f9f9f9;
+}
+
+.profile-section {
+  display: flex;
+  gap: 2rem;
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.profile-photo-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.profile-info h2 {
+  margin: 0 0 0.5rem;
+}
+
+.profile-info p {
+  margin: 0.2rem 0;
+}
+
+.profile-info button {
+  margin-top: 1rem;
+  padding: 0.4rem 1rem;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.profile-info button:hover {
+  background-color: #4338ca;
+}
+
+/* Agent cards */
+.agent-section {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.agent-card {
+  flex: 1;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.agent-card h3 {
+  margin-bottom: 1rem;
+}
+
+.agent-card button {
+  margin: 0.3rem;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  background-color: #6366f1;
+  color: white;
+  cursor: pointer;
+}
+
+.agent-card button.learn-more {
+  background-color: #e0e7ff;
+  color: #3730a3;
+}
+
+.agent-card button.learn-more:hover {
+  background-color: #c7d2fe;
+}
+
+/* Suggested Jobs */
+.job-section {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  margin-bottom: 2rem;
+}
+
+.job-section h3 {
+  margin-bottom: 1rem;
+}
+
+.job-list {
+  list-style: none;
+  padding: 0;
+}
+
+.job-item {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 0;
+}
+
+.job-item h4 {
+  margin: 0;
+}
+
+.job-item p {
+  margin: 0.3rem 0;
+}
+
+.job-item a {
+  color: #4f46e5;
+  text-decoration: underline;
+  font-size: 0.95rem;
+}
+
+/* Applications placeholder */
+.application-section {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  margin-bottom: 2rem;
+}
+
+.application-section h3 {
+  margin-bottom: 0.8rem;
+}
