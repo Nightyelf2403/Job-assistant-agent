@@ -17,16 +17,14 @@ export default function Home() {
 
   return (
     <div className="home-container bg-gray-50 text-gray-800">
-      <div className="h-screen flex flex-col justify-center items-center bg-gray-100" data-aos="fade-in">
+      <div className="h-screen flex flex-col justify-center items-center bg-gray-100 text-center px-4" data-aos="fade-in">
         <h1 className="text-5xl font-bold mb-4">Welcome to Job Assistant</h1>
+        <p className="text-xl text-gray-600 mb-6">Where AI helps you land your dream job effortlessly.</p>
         <p className="text-lg text-gray-600 animate-bounce mt-6">↓ Scroll to explore ↓</p>
       </div>
 
       <div className="max-w-screen-lg mx-auto px-4 py-16" data-aos="fade-up">
         <section className="hero text-center" data-aos="fade-up">
-          <p className="text-lg mb-6">
-            Where AI helps you land your dream jobs. Discover tailored job suggestions, resume improvements, and intelligent application support.
-          </p>
         </section>
 
         <section className="features mt-16" data-aos="zoom-in-up">
