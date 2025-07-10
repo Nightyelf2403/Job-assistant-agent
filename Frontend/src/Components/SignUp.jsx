@@ -41,6 +41,7 @@ export default function SignUp() {
 
   return (
     <div className="p-4 max-w-md mx-auto">
+      <p className="text-center text-lg font-medium text-gray-700 mb-2 animate-pulse">Join the future of job hunting with smart AI!</p>
       <h2 className="text-xl font-bold mb-4">Sign Up</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
@@ -86,6 +87,15 @@ export default function SignUp() {
           Sign Up
         </button>
         {error && <p className="text-red-500">{error}</p>}
+        <p className="text-sm mt-2 text-center">
+          Already a user?{" "}
+          <span
+            onClick={() => navigate("/signin")}
+            className="text-indigo-600 hover:underline cursor-pointer"
+          >
+            Click here
+          </span>
+        </p>
       </form>
     </div>
   );

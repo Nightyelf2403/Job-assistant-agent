@@ -2,12 +2,14 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const authenticateToken = require('../middleware/authenticateToken');
 const {
   signup,
   login,
   updateUser,
   getUserById,
-  getAllUsers
+  getAllUsers,
+  getCurrentUser,
 } = require('../controllers/userController');
 
 // Set up Multer for file uploads (e.g., resume)
@@ -26,5 +28,7 @@ router.post('/login', login);
 router.put('/users/:id', upload.single('resume'), updateUser);
 router.get('/users/:id', getUserById);
 router.get('/users', getAllUsers);
+
+router.get('/me', authenticateToken, getCurrentUser);
 
 module.exports = router;

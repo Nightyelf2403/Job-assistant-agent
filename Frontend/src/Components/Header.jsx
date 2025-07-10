@@ -58,12 +58,18 @@ export default function Header() {
         >
           Dashboard
         </Link>
+        <Link
+          to="/resume-score"
+          className="px-4 py-2 rounded-md font-medium text-sm transition-colors text-indigo-600 hover:bg-indigo-50 border border-indigo-600"
+        >
+          Tailor Resume
+        </Link>
         {isLoggedIn ? (
           <>
             <div className="relative">
               <button
                 onClick={() => setShowProfile(prev => !prev)}
-                className="text-sm font-medium px-4 py-2 border border-indigo-600 text-indigo-600 rounded-md hover:bg-indigo-50 transition-colors"
+                className="px-4 py-2 rounded-md font-medium text-sm transition-colors text-indigo-600 hover:bg-indigo-50 border border-indigo-600"
               >
                 Profile
               </button>
@@ -95,7 +101,7 @@ export default function Header() {
                       setShowProfile(false);
                       navigate("/profile/edit");
                     }}
-                    className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded"
+                    className="mt-4 px-4 py-2 rounded-md font-medium text-sm transition-colors bg-indigo-600 text-white hover:bg-indigo-700 border border-indigo-600"
                   >
                     Edit Profile
                   </button>
@@ -104,7 +110,7 @@ export default function Header() {
             </div>
             <button
               onClick={handleLogout}
-              className="text-sm font-semibold px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+              className="px-4 py-2 rounded-md font-medium text-sm transition-colors bg-red-500 text-white hover:bg-red-600 border border-red-500"
             >
               Logout
             </button>
@@ -113,13 +119,13 @@ export default function Header() {
           <>
             <Link
               to="/signin"
-              className="text-sm font-medium px-4 py-2 border border-indigo-600 text-indigo-600 rounded-md hover:bg-indigo-50 transition-colors"
+              className="px-4 py-2 rounded-md font-medium text-sm transition-colors text-indigo-600 hover:bg-indigo-50 border border-indigo-600"
             >
               Sign In
             </Link>
             <Link
               to="/signup"
-              className="text-sm font-medium px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+              className="px-4 py-2 rounded-md font-medium text-sm transition-colors bg-indigo-600 text-white hover:bg-indigo-700 border border-indigo-600"
             >
               Sign Up
             </Link>

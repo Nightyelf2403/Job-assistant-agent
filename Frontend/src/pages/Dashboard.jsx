@@ -166,7 +166,7 @@ export default function Dashboard() {
     };
   }, [selectedJob]);
 
-  if (!user) return <div className="p-8">Loading Dashboard...</div>;
+  if (!user) return <div className="p-8">Sign-In or Sign-Up To View DashBoard!!...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 space-y-6">

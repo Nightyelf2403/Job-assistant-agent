@@ -143,10 +143,23 @@ exports.submitFeedback = async (req, res) => {
   }
 };
 exports.generateRecruiterAnswers = async (req, res) => {
-  const { jobDescription, userProfile, questions } = req.body;
-  if (!jobDescription || !userProfile || !Array.isArray(questions) || questions.length === 0) {
-    return res.status(400).json({ error: 'Missing job description, user profile, or questions' });
+  const { jobId, userId, questions } = req.body;
+
+  if (!jobId || !userId || !Array.isArray(questions) || questions.length === 0) {
+    return res.status(400).json({ error: 'Missing jobId, userId, or questions' });
   }
+
+  const job = await prisma.savedJob.findFirst({
+    where: { id: jobId },
+    select: { description: true }
+  });
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  });
+
+  const jobDescription = job?.description || '';
+  const userProfile = user || {};
 
   const messages = [
     {
