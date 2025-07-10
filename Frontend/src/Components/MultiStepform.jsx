@@ -198,7 +198,7 @@ export default function MultiStepform({ isEditing = false }) {
 
   return (
     <>
-      <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>
+      <h2 className="text-2xl font-semibold text-center mb-6">
         {isEditing ? "Edit Your Profile" : "Setup Your Profile"}
       </h2>
       <div className="multi-container">
@@ -211,8 +211,8 @@ export default function MultiStepform({ isEditing = false }) {
         <form className="multi-form" onSubmit={handleSubmit}>
           {step === 1 && (
             <>
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Upload Resume:</label>
+              <div className="mb-6">
+                <label className="block mb-2 text-gray-700 font-medium">Upload Resume:</label>
                 <input
                   type="file"
                   name="resume"
@@ -244,8 +244,8 @@ export default function MultiStepform({ isEditing = false }) {
                 )}
               </div>
 
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Current Location:</label>
+              <div className="mb-6">
+                <label className="block mb-2 text-gray-700 font-medium">Current Location:</label>
                 <CreatableSelect
                   isClearable
                   options={countryCityOptions}
@@ -257,11 +257,12 @@ export default function MultiStepform({ isEditing = false }) {
                   onChange={(selected) =>
                     setForm((prev) => ({ ...prev, currentLocation: selected?.value || "" }))
                   }
+                  className="w-full"
                 />
               </div>
 
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Phone Number *</label>
+              <div className="mb-6">
+                <label className="block mb-2 text-gray-700 font-medium">Phone Number *</label>
                 <input
                   type="tel"
                   name="phone"
@@ -273,8 +274,8 @@ export default function MultiStepform({ isEditing = false }) {
                 />
               </div>
 
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Portfolio Link</label>
+              <div className="mb-6">
+                <label className="block mb-2 text-gray-700 font-medium">Portfolio Link</label>
                 <input
                   type="url"
                   name="portfolio"
@@ -285,8 +286,8 @@ export default function MultiStepform({ isEditing = false }) {
                 />
               </div>
 
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">GitHub Link</label>
+              <div className="mb-6">
+                <label className="block mb-2 text-gray-700 font-medium">GitHub Link</label>
                 <input
                   type="url"
                   name="github"
@@ -302,7 +303,7 @@ export default function MultiStepform({ isEditing = false }) {
           {step === 2 && (
             <>
               <div className="mb-4">
-                <label>Preferred Locations *</label>
+                <label className="block mb-1 font-medium">Preferred Locations *</label>
                 <CreatableSelect
                   isMulti
                   options={countryCityOptions}
@@ -313,7 +314,7 @@ export default function MultiStepform({ isEditing = false }) {
               </div>
 
               <div className="mb-4">
-                <label>Job Type *</label>
+                <label className="block mb-1 font-medium">Job Type *</label>
                 <CreatableSelect
                   isClearable
                   options={jobTypeOptions}
@@ -326,7 +327,7 @@ export default function MultiStepform({ isEditing = false }) {
               </div>
 
               <div className="mb-4">
-                <label>Desired Position *</label>
+                <label className="block mb-1 font-medium">Desired Position *</label>
                 <Select
                   options={positionOptions}
                   value={positionOptions.find((opt) => opt.value === form.desiredPosition)}
@@ -340,18 +341,18 @@ export default function MultiStepform({ isEditing = false }) {
           {step === 3 && (
             <>
               <div className="mb-4">
-                <label>Desired Salary:</label>
+                <label className="block mb-1 font-medium">Desired Salary:</label>
                 <input
                   name="desiredSalary"
                   value={form.desiredSalary}
                   onChange={handleChange}
                   placeholder="e.g., ₹6 LPA"
-                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div className="mb-4">
-                <label>Work Preference *</label>
+                <label className="block mb-1 font-medium">Work Preference *</label>
                 <Select
                   isMulti
                   options={workPreferenceOptions}
@@ -362,7 +363,7 @@ export default function MultiStepform({ isEditing = false }) {
               </div>
 
               <div className="mb-4">
-                <label>Skills *</label>
+                <label className="block mb-1 font-medium">Skills *</label>
                 <CreatableSelect
                   isMulti
                   options={skillOptions}
@@ -373,7 +374,7 @@ export default function MultiStepform({ isEditing = false }) {
               </div>
 
               <div className="mb-4">
-                <label>Languages</label>
+                <label className="block mb-1 font-medium">Languages</label>
                 <CreatableSelect
                   isMulti
                   value={form.languages.map((lang) => ({ label: lang, value: lang }))}
@@ -385,7 +386,7 @@ export default function MultiStepform({ isEditing = false }) {
               </div>
 
               <div className="mb-4">
-                <label>Certifications</label>
+                <label className="block mb-1 font-medium">Certifications</label>
                 <CreatableSelect
                   isMulti
                   value={form.certifications.map((cert) => ({ label: cert, value: cert }))}
@@ -399,7 +400,7 @@ export default function MultiStepform({ isEditing = false }) {
               <div className="mb-4">
                 <label className="block mb-1 font-medium">Work Experience</label>
                 {form.experience.map((exp, index) => (
-                  <div key={index} className="mb-2 border p-2 rounded">
+                  <div key={index} className="mb-2 border p-2 rounded bg-gray-50">
                     <input
                       type="text"
                       placeholder="Job Title"
@@ -409,7 +410,7 @@ export default function MultiStepform({ isEditing = false }) {
                         newHistory[index].title = e.target.value;
                         setForm({ ...form, experience: newHistory });
                       }}
-                      className="w-full mb-1 px-3 py-1 border rounded"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-1"
                     />
                     <input
                       type="text"
@@ -420,7 +421,7 @@ export default function MultiStepform({ isEditing = false }) {
                         newHistory[index].company = e.target.value;
                         setForm({ ...form, experience: newHistory });
                       }}
-                      className="w-full mb-1 px-3 py-1 border rounded"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-1"
                     />
                     <input
                       type="text"
@@ -431,7 +432,7 @@ export default function MultiStepform({ isEditing = false }) {
                         newHistory[index].duration = e.target.value;
                         setForm({ ...form, experience: newHistory });
                       }}
-                      className="w-full mb-1 px-3 py-1 border rounded"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-1"
                     />
                     <button
                       type="button"
@@ -440,7 +441,7 @@ export default function MultiStepform({ isEditing = false }) {
                         newHistory.splice(index, 1);
                         setForm({ ...form, experience: newHistory });
                       }}
-                      className="text-red-600 text-sm"
+                      className="text-red-600 text-sm mt-1"
                     >
                       Remove
                     </button>
@@ -460,7 +461,7 @@ export default function MultiStepform({ isEditing = false }) {
               <div className="mb-4">
                 <label className="block mb-1 font-medium">Education</label>
                 {form.education.map((edu, index) => (
-                  <div key={index} className="mb-2 border p-2 rounded">
+                  <div key={index} className="mb-2 border p-2 rounded bg-gray-50">
                     <input
                       type="text"
                       placeholder="School"
@@ -470,7 +471,7 @@ export default function MultiStepform({ isEditing = false }) {
                         newEducation[index].school = e.target.value;
                         setForm({ ...form, education: newEducation });
                       }}
-                      className="w-full mb-1 px-3 py-1 border rounded"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-1"
                     />
                     <input
                       type="text"
@@ -481,7 +482,7 @@ export default function MultiStepform({ isEditing = false }) {
                         newEducation[index].degree = e.target.value;
                         setForm({ ...form, education: newEducation });
                       }}
-                      className="w-full mb-1 px-3 py-1 border rounded"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-1"
                     />
                     <input
                       type="text"
@@ -492,7 +493,7 @@ export default function MultiStepform({ isEditing = false }) {
                         newEducation[index].year = e.target.value;
                         setForm({ ...form, education: newEducation });
                       }}
-                      className="w-full mb-1 px-3 py-1 border rounded"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-1"
                     />
                     <button
                       type="button"
@@ -501,7 +502,7 @@ export default function MultiStepform({ isEditing = false }) {
                         newEducation.splice(index, 1);
                         setForm({ ...form, education: newEducation });
                       }}
-                      className="text-red-600 text-sm"
+                      className="text-red-600 text-sm mt-1"
                     >
                       Remove
                     </button>

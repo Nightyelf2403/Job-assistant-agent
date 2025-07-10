@@ -12,7 +12,12 @@ export default function Home() {
   }, []);
 
   const handleGetStarted = () => {
-    navigate("/signup");
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/dashboard");
+    } else {
+      navigate("/signup");
+    }
   };
 
   return (

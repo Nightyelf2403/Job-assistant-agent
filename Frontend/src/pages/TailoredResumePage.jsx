@@ -152,7 +152,23 @@ const TailoredResumePage = () => {
             {rawResumeText ? (
               <>
                 <div className={`resume-text-container ${showFullText ? 'expanded' : 'collapsed'}`}>
-                  <pre>{showFullText ? rawResumeText : rawResumeText.slice(0, 1000) + "..."}</pre>
+                  <pre
+                    style={{
+                      whiteSpace: 'pre-wrap',
+                      wordWrap: 'break-word',
+                      lineHeight: '1.5',
+                      fontSize: '14px',
+                      fontFamily: 'monospace',
+                      padding: '1rem',
+                      backgroundColor: '#f9f9f9',
+                      borderRadius: '8px',
+                      border: '1px solid #ccc',
+                      maxHeight: showFullText ? 'none' : '300px',
+                      overflowY: 'auto'
+                    }}
+                  >
+                    {showFullText ? rawResumeText : rawResumeText.slice(0, 1000) + "..."}
+                  </pre>
                 </div>
                 <button onClick={() => setShowFullText(!showFullText)} className="toggle-btn">
                   {showFullText ? "Show Less" : "Show More"}
