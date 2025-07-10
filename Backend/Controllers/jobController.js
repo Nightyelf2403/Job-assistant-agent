@@ -336,6 +336,22 @@ const getSuggestedJobById = async (req, res) => {
   }
 };
 
+// ✅ Get Job Details (for details endpoint)
+const getJobDetails = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const allJobs = [...(global.cachedJobs || []), ...(global.normalJobs || [])];
+    const job = allJobs.find(j => j.job_id === id);
+    if (!job) {
+      return res.status(404).json({ error: "Job not found in cache" });
+    }
+    res.json(job);
+  } catch (error) {
+    console.error("❌ Error fetching job details:", error);
+    res.status(500).json({ error: "Failed to retrieve job details" });
+  }
+};
+
 // ✅ Apply via Autofill (stores application in DB)
 const applyViaAutofill = async (req, res) => {
   const { userId, job } = req.body;
@@ -370,4 +386,5 @@ module.exports = {
   saveJob,
   getSuggestedJobById,
   applyViaAutofill,
+  getJobDetails,
 };

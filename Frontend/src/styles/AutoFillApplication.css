@@ -1,72 +1,86 @@
 /* AutoFillApplication.css */
 
-.auto-application-container {
-  background-color: #f9fafb;
+.autoapply-container {
+  display: flex;
+  gap: 2rem;
   padding: 2rem;
-  border-radius: 8px;
-  max-width: 800px;
-  margin: 0 auto;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  background-color: #f9f9f9;
+  min-height: 100vh;
 }
 
-.auto-application-header {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-}
-
-.job-card {
-  background: #fff;
-  padding: 1.25rem;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  margin-bottom: 1.5rem;
-}
-
-.qa-block {
-  background: #f1f5f9;
-  border-radius: 6px;
+.job-description-box {
+  flex: 1;
   padding: 1rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
+.job-description-box h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
   margin-bottom: 1rem;
 }
 
-.qa-block input,
-.qa-block textarea {
+.job-description-box p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #333;
+}
+
+.autoapply-form {
+  flex: 2;
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.autoapply-form h3 {
+  font-size: 1.1rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.autoapply-form textarea,
+.autoapply-form input {
   width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
   font-size: 0.95rem;
 }
 
-.action-buttons {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.action-buttons button {
-  padding: 0.5rem 1.25rem;
-  border-radius: 6px;
-  font-weight: 500;
-  transition: background 0.2s ease;
-}
-
-button.generate {
+.autoapply-form button {
   background-color: #4f46e5;
   color: white;
-}
-
-button.submit {
-  background-color: #059669;
-  color: white;
-}
-
-button.dashboard {
-  margin-top: 1rem;
-  color: #4f46e5;
-  background: none;
+  padding: 0.75rem 1.25rem;
   border: none;
-  font-weight: 500;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 0.95rem;
+  margin-top: 1rem;
+}
+
+.autoapply-form button:hover {
+  background-color: #4338ca;
+}
+
+.ai-answer-box {
+  margin-bottom: 1.5rem;
+}
+
+.ai-answer-box p {
+  background: #f0f4f8;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.cover-letter-box {
+  margin-top: 2rem;
 }

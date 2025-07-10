@@ -1,136 +1,98 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import API from "../api";
-import "../styles/AutoFillApplication.css";
 
 export default function AutoFillApplication() {
   const { jobId } = useParams();
   const [job, setJob] = useState(null);
-  const [questions, setQuestions] = useState([{ question: "", answer: "" }]);
-  const [status, setStatus] = useState({ loading: false, error: "", success: "" });
+  const [questions, setQuestions] = useState([
+    { question: "Why do you want to work here?", answer: "" },
+    { question: "What attracts you to this role?", answer: "" },
+    { question: "How does this align with your future goals?", answer: "" },
+  ]);
+  const [customQuestion, setCustomQuestion] = useState("");
+  const [coverLetter, setCoverLetter] = useState("");
 
   useEffect(() => {
-    const fetchJob = async () => {
+    async function fetchJobDetails() {
       try {
-        const res = await API.get(`/jobs/details/${jobId}`);
-        setJob(res.data.job);
+        const res = await API.get(`/jobs/suggested-job/${jobId}`);
+        setJob(res.data);
       } catch (err) {
-        setStatus((prev) => ({ ...prev, error: "Failed to load job" }));
+        console.error("❌ Failed to load job details:", err);
       }
-    };
-    fetchJob();
+    }
+    fetchJobDetails();
   }, [jobId]);
 
-  const handleChange = (index, field, value) => {
+  const handleQuestionChange = (index, value) => {
     const updated = [...questions];
-    updated[index][field] = value;
+    updated[index].answer = value;
     setQuestions(updated);
   };
 
-  const handleAddQuestion = () => {
-    setQuestions([...questions, { question: "", answer: "" }]);
+  const handleSubmit = () => {
+    // Will wire up backend logic later
+    console.log("Submitting:", { jobId, questions, coverLetter });
   };
 
-  const handleGenerateAnswers = async () => {
-    try {
-      setStatus({ loading: true, error: "", success: "" });
-      const res = await API.post("/generate/answer", { questions });
-      const formatted = questions.map((q, i) => ({
-        question: q.question,
-        answer: res.data.answers[i] || "",
-      }));
-      setQuestions(formatted);
-      setStatus({ loading: false, success: "Answers generated" });
-    } catch (err) {
-      setStatus({ loading: false, error: "AI answer generation failed" });
-    }
-  };
-
-  const handleSubmit = async () => {
-    try {
-      setStatus({ loading: true, error: "", success: "" });
-      const userId = localStorage.getItem("userId");
-      await API.post(`/applications/autofill/${userId}`, {
-        jobId,
-        questions,
-      });
-      setStatus({ loading: false, success: "Application submitted successfully" });
-    } catch (err) {
-      setStatus({ loading: false, error: "Submission failed" });
-    }
-  };
+  if (!job) return <div className="p-4">Loading job description...</div>;
 
   return (
-    <div className="auto-application-container">
-      {status.loading && <p className="text-blue-600 mb-4">Loading...</p>}
-      <h2 className="text-2xl font-bold mb-4">Autofill Application</h2>
+    <div className="grid grid-cols-2 gap-6 p-6">
+      {/* Left: Job Description */}
+      <div className="bg-white p-4 rounded shadow h-full overflow-auto">
+        <h2 className="text-xl font-bold mb-2">{job.job_title}</h2>
+        <p className="text-sm text-gray-700 whitespace-pre-line">
+          {job.job_description || "No description provided."}
+        </p>
+      </div>
 
-      {job && (
-        <div className="mb-6 p-4 border rounded bg-gray-50">
-          <h3 className="text-xl font-semibold">{job.title}</h3>
-          <p className="text-sm text-gray-600">{job.company} – {job.location}</p>
-          <p className="mt-2">{job.description}</p>
-        </div>
-      )}
-
-      <div className="space-y-4 mb-6">
-        <h4 className="text-lg font-semibold">Recruiter Questions</h4>
-        {questions.map((qa, idx) => (
-          <div key={idx} className="border p-4 rounded space-y-2">
-            <input
-              type="text"
-              placeholder="Question"
-              value={qa.question}
-              onChange={(e) => handleChange(idx, "question", e.target.value)}
-              className="w-full px-3 py-2 border"
-            />
+      {/* Right: Application Form */}
+      <div className="bg-white p-4 rounded shadow space-y-4">
+        <h3 className="text-lg font-semibold">Recruiter Questions</h3>
+        {questions.map((q, index) => (
+          <div key={index}>
+            <label className="block font-medium text-sm mb-1">{q.question}</label>
             <textarea
-              placeholder="Answer (optional, can use AI)"
-              value={qa.answer}
-              onChange={(e) => handleChange(idx, "answer", e.target.value)}
-              className="w-full px-3 py-2 border"
+              value={q.answer}
+              onChange={(e) => handleQuestionChange(index, e.target.value)}
+              className="w-full border rounded p-2 text-sm"
+              rows={2}
             />
           </div>
         ))}
-        <button
-          onClick={handleAddQuestion}
-          className="text-blue-600 hover:underline text-sm"
-        >
-          + Add another question
-        </button>
-      </div>
 
-      <div className="bg-gray-100 p-4 rounded text-sm mb-4">
-        <p><strong>Using your profile data:</strong> name, email, phone, skills...</p>
-      </div>
+        {/* Custom question */}
+        <div>
+          <label className="block font-medium text-sm mb-1">Ask the AI a custom question</label>
+          <input
+            value={customQuestion}
+            onChange={(e) => setCustomQuestion(e.target.value)}
+            className="w-full border rounded p-2 text-sm"
+            placeholder="e.g. What technologies does the company use?"
+          />
+          {/* We can later wire this to AI */}
+        </div>
 
-      <div className="flex gap-4">
-        <button
-          onClick={handleGenerateAnswers}
-          className="bg-indigo-600 text-white px-4 py-2 rounded"
-          disabled={status.loading}
-        >
-          Generate Answers with AI
-        </button>
+        {/* Cover Letter */}
+        <div>
+          <label className="block font-medium text-sm mb-1">Cover Letter</label>
+          <textarea
+            value={coverLetter}
+            onChange={(e) => setCoverLetter(e.target.value)}
+            className="w-full border rounded p-2 text-sm"
+            rows={6}
+          />
+        </div>
+
         <button
           onClick={handleSubmit}
-          className="bg-green-600 text-white px-4 py-2 rounded"
-          disabled={status.loading}
+          className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
         >
           Submit Application
         </button>
       </div>
-
-      {status.error && <p className="text-red-500 mt-4">{status.error}</p>}
-      {status.success && <p className="text-green-600 mt-4">{status.success}</p>}
-      {status.success && (
-        <button
-          className="mt-4 px-4 py-2 text-indigo-600 underline"
-          onClick={() => window.location.href = "/dashboard"}
-        >
-          ← Back to Dashboard
-        </button>
-      )}
     </div>
   );
 }

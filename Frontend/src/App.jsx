@@ -40,6 +40,7 @@ export default function App() {
           <Route path="/job-tracker" element={<JobTracker />} />
           <Route path="/profile/edit" element={<MultiStepform isEditing={true} />} />
           <Route path="/autofill/:jobId" element={<AutoFillApplication />} /> 
+          
         </Routes>
       </main>
       <Footer />
