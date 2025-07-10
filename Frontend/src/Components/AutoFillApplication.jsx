@@ -10,6 +10,7 @@ export default function AutoFillApplication() {
     { question: "What attracts you to this role?", answer: "" },
     { question: "How does this align with your future goals?", answer: "" },
   ]);
+  const [userProfile, setUserProfile] = useState(null);
   const [customQuestion, setCustomQuestion] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
 
@@ -25,10 +26,50 @@ export default function AutoFillApplication() {
     fetchJobDetails();
   }, [jobId]);
 
+  useEffect(() => {
+    async function fetchUserProfile() {
+      try {
+        const res = await API.get(`/users/${job.userId}`);
+        setUserProfile(res.data);
+      } catch (err) {
+        console.error("❌ Failed to load user profile:", err);
+      }
+    }
+    if (job?.userId) fetchUserProfile();
+  }, [job]);
+
   const handleQuestionChange = (index, value) => {
     const updated = [...questions];
     updated[index].answer = value;
     setQuestions(updated);
+  };
+
+  const handleAskAI = async () => {
+    console.log("📤 Sending to backend:", {
+      jobDescription: job?.description,
+      userProfile,
+      questions: questions.map(q => q.question),
+    });
+
+    if (!job?.description || !userProfile) {
+      console.warn("🚫 Missing job description or user profile");
+      return;
+    }
+
+    try {
+      const res = await API.post("/generate/recruiter-answers", {
+        jobDescription: job.description,
+        userProfile,
+        questions: questions.map(q => q.question)
+      });
+      const answered = res.data.answers.map(ans => ({
+        question: ans.question,
+        answer: ans.answer
+      }));
+      setQuestions(answered);
+    } catch (err) {
+      console.error("❌ Failed to fetch recruiter answers:", err);
+    }
   };
 
   const handleSubmit = () => {
@@ -77,10 +118,11 @@ export default function AutoFillApplication() {
                 news?.title && (news.link || news.url) ? (
                   <li key={i}>
                     <a
-                      href={news.link || news.url}
+                      href={encodeURI(news.link || news.url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline"
+                      title={news.title}
                     >
                       {news.title}
                     </a>
@@ -97,29 +139,21 @@ export default function AutoFillApplication() {
       {/* Right: Application Form */}
       <div className="bg-white p-4 rounded shadow space-y-4">
         <h3 className="text-lg font-semibold">Recruiter Questions</h3>
+        <p className="text-sm text-gray-500 mb-3">
+          These common questions help tailor your application using AI. Fill them out to improve your application's effectiveness. You can modify or enhance the suggested answers.
+        </p>
         {questions.map((q, index) => (
-          <div key={index}>
+          <div key={index} className="mb-3">
             <label className="block font-medium text-sm mb-1">{q.question}</label>
             <textarea
               value={q.answer}
               onChange={(e) => handleQuestionChange(index, e.target.value)}
               className="w-full border rounded p-2 text-sm"
               rows={2}
+              placeholder="Your personalized response..."
             />
           </div>
         ))}
-
-        {/* Custom question */}
-        <div>
-          <label className="block font-medium text-sm mb-1">Ask the AI a custom question</label>
-          <input
-            value={customQuestion}
-            onChange={(e) => setCustomQuestion(e.target.value)}
-            className="w-full border rounded p-2 text-sm"
-            placeholder="e.g. What technologies does the company use?"
-          />
-          {/* We can later wire this to AI */}
-        </div>
 
         {/* Cover Letter */}
         <div>
@@ -130,6 +164,21 @@ export default function AutoFillApplication() {
             className="w-full border rounded p-2 text-sm"
             rows={6}
           />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            value={customQuestion}
+            onChange={(e) => setCustomQuestion(e.target.value)}
+            className="flex-1 border rounded p-2 text-sm"
+            placeholder="Ask the AI a custom question"
+          />
+          <button
+            onClick={handleAskAI}
+            className="bg-gray-200 text-sm px-3 py-2 rounded hover:bg-gray-300"
+          >
+            Ask AI
+          </button>
         </div>
 
         <button

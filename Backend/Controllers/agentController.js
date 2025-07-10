@@ -142,3 +142,65 @@ exports.submitFeedback = async (req, res) => {
     res.status(500).json({ error: 'Failed to store feedback' });
   }
 };
+exports.generateRecruiterAnswers = async (req, res) => {
+  const { jobDescription, userProfile, questions } = req.body;
+  if (!jobDescription || !userProfile || !Array.isArray(questions) || questions.length === 0) {
+    return res.status(400).json({ error: 'Missing job description, user profile, or questions' });
+  }
+
+  const messages = [
+    {
+      role: 'system',
+      content: 'You are a helpful assistant that answers recruiter questions using a candidate profile and job description.'
+    },
+    {
+      role: 'user',
+      content: `
+Job Description:
+${jobDescription}
+
+User Profile:
+${JSON.stringify(userProfile)}
+
+Questions:
+${JSON.stringify(questions)}
+
+Respond ONLY in this JSON format:
+{
+  "answers": [
+    { "question": "...", "answer": "..." },
+    { "question": "...", "answer": "..." }
+  ]
+}`
+    }
+  ];
+
+  try {
+    const response = await axios.post(
+      'https://adihub3504002192.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview',
+      {
+        messages,
+        temperature: 0.7
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': process.env.AZURE_API_KEY
+        }
+      }
+    );
+
+    const message = response.data.choices[0]?.message?.content;
+    let json;
+    try {
+      json = JSON.parse(message);
+    } catch (parseErr) {
+      console.error('JSON parse error in generateRecruiterAnswers:', parseErr);
+      return res.status(500).json({ error: 'Failed to parse AI response' });
+    }
+    res.json(json);
+  } catch (err) {
+    console.error('Recruiter answers generation error:', err);
+    res.status(500).json({ error: 'Failed to generate recruiter answers' });
+  }
+};

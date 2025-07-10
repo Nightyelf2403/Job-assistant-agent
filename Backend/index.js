@@ -42,6 +42,7 @@ app.use('/api', dashboardRoutes);
 app.use('/api', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 
+
 app.get('/api/status', (req, res) => {
   res.json({ status: 'ok' });
 });

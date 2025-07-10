@@ -114,3 +114,18 @@
   margin-bottom: 0.5rem;
   font-size: 0.95rem;
 }
+.recruiter-info-text {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.recruiter-question-field {
+  margin-bottom: 1rem;
+}
+
+.ask-ai-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}

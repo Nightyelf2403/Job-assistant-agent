@@ -41,6 +41,7 @@ model Application {
   jobTitle      String
   company       String
   location      String
+  jobId         String
   description   String?
   applyLink     String?
   source        String?

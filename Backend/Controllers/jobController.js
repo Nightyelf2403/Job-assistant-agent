@@ -358,8 +358,28 @@ const getJobDetails = async (req, res) => {
     if (!job) {
       return res.status(404).json({ error: "Job not found in cache" });
     }
-    const insights = await getCompanyInsights(job.employer_name || "Unknown Company");
-    res.json({ ...job, companyInsights: insights });
+
+    // Map job_description to description if missing, and handle employer_name fallback
+    const fullJob = {
+      ...job,
+      description: job.description || job.job_description || "",
+      employer_name: job.employer_name || job.company_name || "Unknown Company"
+    };
+
+    const insights = await getCompanyInsights(fullJob.employer_name);
+    const application = await prisma.application.findFirst({
+      where: { jobId: id },
+      select: { userId: true }
+    });
+    const user = application?.userId
+      ? await prisma.user.findUnique({ where: { id: application.userId } })
+      : null;
+    res.json({
+      ...fullJob,
+      companyInsights: insights,
+      userId: application?.userId || null,
+      userProfile: user || null
+    });
   } catch (error) {
     console.error("❌ Error fetching job details:", error);
     res.status(500).json({ error: "Failed to retrieve job details" });

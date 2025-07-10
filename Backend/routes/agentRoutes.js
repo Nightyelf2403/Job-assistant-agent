@@ -3,7 +3,8 @@ const upload = require('../middleware/upload');
 const {
   generateAnswer,
   analyzeResume,
-  submitFeedback
+  submitFeedback,
+  generateRecruiterAnswers,
 } = require('../controllers/agentController');
 
 const router = express.Router();
@@ -12,5 +13,7 @@ const router = express.Router();
 router.post('/generate/answer', generateAnswer);
 router.post('/resume/analyze', upload.single('resume'), analyzeResume);
 router.post('/feedback', submitFeedback); // Optional feedback
+router.post('/generate/recruiter-answers', generateRecruiterAnswers);
+
 
 module.exports = router;
