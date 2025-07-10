@@ -16,7 +16,7 @@ export default function AutoFillApplication() {
   useEffect(() => {
     async function fetchJobDetails() {
       try {
-        const res = await API.get(`/jobs/suggested-job/${jobId}`);
+        const res = await API.get(`/jobs/details/${jobId}`);
         setJob(res.data);
       } catch (err) {
         console.error("❌ Failed to load job details:", err);
@@ -41,11 +41,46 @@ export default function AutoFillApplication() {
   return (
     <div className="grid grid-cols-2 gap-6 p-6">
       {/* Left: Job Description */}
-      <div className="bg-white p-4 rounded shadow h-full overflow-auto">
-        <h2 className="text-xl font-bold mb-2">{job.job_title}</h2>
-        <p className="text-sm text-gray-700 whitespace-pre-line">
-          {job.job_description || "No description provided."}
-        </p>
+      <div className="bg-white p-4 rounded shadow h-full overflow-auto space-y-4">
+        <h2 className="text-2xl font-bold">{job.job_title}</h2>
+        <p className="text-sm text-gray-600">{job.company_name}</p>
+        <p className="text-sm text-gray-500">{job.locations?.join(", ")}</p>
+
+        <hr />
+
+        <section>
+          <h3 className="font-semibold text-lg">Requirements</h3>
+          <ul className="list-disc list-inside text-sm text-gray-700 whitespace-pre-line">
+            {job.job_highlights?.Qualifications?.map((req, i) => <li key={i}>{req}</li>)}
+          </ul>
+        </section>
+
+        <section>
+          <h3 className="font-semibold text-lg">Responsibilities</h3>
+          <ul className="list-disc list-inside text-sm text-gray-700 whitespace-pre-line">
+            {job.job_highlights?.Responsibilities?.map((res, i) => <li key={i}>{res}</li>)}
+          </ul>
+        </section>
+
+        <section>
+          <h3 className="font-semibold text-lg">Why This Company?</h3>
+          <ul className="text-sm text-gray-700 space-y-1">
+            {job.job_highlights?.Benefits?.map((item, i) => <li key={i}>✅ {item}</li>)}
+          </ul>
+        </section>
+
+        <section>
+          <h3 className="font-semibold text-lg">Company News</h3>
+          <ul className="text-sm text-gray-700 space-y-1">
+            {job.companyInsights?.map((news, i) => (
+              <li key={i}>
+                <a href={news.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                  {news.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
 
       {/* Right: Application Form */}

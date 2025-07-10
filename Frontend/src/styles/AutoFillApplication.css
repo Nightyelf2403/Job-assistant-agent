@@ -84,3 +84,33 @@
 .cover-letter-box {
   margin-top: 2rem;
 }
+
+.job-highlights,
+.company-news {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #fdfdfd;
+  border-left: 4px solid #4f46e5;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.job-highlights h4,
+.company-news h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.job-highlights ul,
+.company-news ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  color: #444;
+}
+
+.job-highlights ul li,
+.company-news ul li {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}

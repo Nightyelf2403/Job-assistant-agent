@@ -135,6 +135,19 @@ async function getStrictJsonResponse(prompt, maxAttempts = 3) {
   throw new Error("All GPT attempts failed to return valid JSON.");
 }
 
+async function getCompanyInsights(companyName) {
+  const prompt = `
+Provide a JSON array of up to 5 recent (2024–2025) news article titles and links about the company "${companyName}". Only include direct news links (from sites like Forbes, CNBC, Bloomberg, etc.), not blog posts or unrelated sources. Format:
+[{"title": "...", "url": "https://..." }]
+`;
+  try {
+    const insights = await getStrictJsonResponse(prompt);
+    return insights;
+  } catch (error) {
+    console.error("❌ Error fetching company insights:", error.message);
+    return [];
+  }
+}
 
 const getRemoteJobs = async (req, res) => {
   const userId = req.params.id;
@@ -345,7 +358,8 @@ const getJobDetails = async (req, res) => {
     if (!job) {
       return res.status(404).json({ error: "Job not found in cache" });
     }
-    res.json(job);
+    const insights = await getCompanyInsights(job.employer_name || "Unknown Company");
+    res.json({ ...job, companyInsights: insights });
   } catch (error) {
     console.error("❌ Error fetching job details:", error);
     res.status(500).json({ error: "Failed to retrieve job details" });
@@ -387,4 +401,5 @@ module.exports = {
   getSuggestedJobById,
   applyViaAutofill,
   getJobDetails,
+  getCompanyInsights,
 };
