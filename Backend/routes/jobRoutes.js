@@ -1,8 +1,14 @@
 const express = require('express');
 const router = express.Router();
 
-const { getRemoteJobs, saveJob } = require('../Controllers/jobController');
+const { getRemoteJobs, saveJob, applyViaAutofill } = require('../Controllers/jobController');
 
-router.get('/jobs/suggested/:id', getRemoteJobs);  // ✅ FIXED PATH
+router.get('/jobs/suggested/:id', getRemoteJobs); 
 router.post('/save/:id', saveJob);
+
+router.post("/apply/autofill", applyViaAutofill);
 module.exports = router;
+
+
+
+

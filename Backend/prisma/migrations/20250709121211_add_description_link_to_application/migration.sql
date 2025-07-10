@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Application" ALTER COLUMN "dateApplied" SET DEFAULT CURRENT_TIMESTAMP,
+ALTER COLUMN "status" SET DEFAULT 'Applied';

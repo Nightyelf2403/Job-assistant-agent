@@ -97,7 +97,14 @@ export default function MultiStepform({ isEditing = false }) {
     desiredPosition: "",
     desiredSalary: "",
     workPreference: [],
-    skills: []
+    skills: [],
+    phone: "",
+    portfolio: "",
+    github: "",
+    experience: [],
+    education: [],
+    languages: [],
+    certifications: []
   });
 
   useEffect(() => {
@@ -114,7 +121,14 @@ export default function MultiStepform({ isEditing = false }) {
           desiredSalary: data.desiredSalary || "",
           workPreference: data.workPreference?.map(v => ({ value: v, label: v })) || [],
           skills: data.skills?.map(v => ({ value: v, label: v })) || [],
-          resume: null
+          resume: null,
+          phone: data.phone || "",
+          portfolio: data.portfolio || "",
+          github: data.github || "",
+          experience: data.experience || [],
+          education: data.education || [],
+          languages: Array.isArray(data.languages) ? data.languages : [],
+          certifications: Array.isArray(data.certifications) ? data.certifications : []
         });
       } catch (err) {
         console.error("❌ Failed to fetch profile:", err);
@@ -149,6 +163,13 @@ export default function MultiStepform({ isEditing = false }) {
       formData.append("desiredSalary", form.desiredSalary);
       formData.append("workPreference", JSON.stringify(form.workPreference.map(wp => wp.value)));
       formData.append("skills", JSON.stringify(form.skills.map(s => s.value)));
+      formData.append("phone", form.phone);
+      formData.append("portfolio", form.portfolio);
+      formData.append("github", form.github);
+      formData.append("experience", JSON.stringify(form.experience));
+      formData.append("education", JSON.stringify(form.education));
+      formData.append("languages", JSON.stringify(form.languages || []));
+      formData.append("certifications", JSON.stringify(form.certifications || []));
 
       const response = await API.put(`/users/${userId}`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
@@ -184,79 +205,290 @@ export default function MultiStepform({ isEditing = false }) {
         <form className="multi-form" onSubmit={handleSubmit}>
           {step === 1 && (
             <>
-              <label>Upload Resume:</label>
-              <input type="file" name="resume" accept=".pdf,.doc,.docx" onChange={handleFileChange} />
+              <div className="mb-4">
+                <label className="block mb-1 font-medium">Upload Resume:</label>
+                <input
+                  type="file"
+                  name="resume"
+                  accept=".pdf,.doc,.docx"
+                  onChange={handleFileChange}
+                  className="block w-full border border-gray-300 rounded-lg px-4 py-2 text-sm file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+                />
+              </div>
 
-              <label>Current Location:</label>
-              <CreatableSelect
-                isClearable
-                options={countryCityOptions}
-                value={
-                  form.currentLocation
-                    ? { label: form.currentLocation, value: form.currentLocation }
-                    : null
-                }
-                onChange={(selected) =>
-                  setForm((prev) => ({ ...prev, currentLocation: selected?.value || "" }))
-                }
-              />
+              <div className="mb-4">
+                <label className="block mb-1 font-medium">Current Location:</label>
+                <CreatableSelect
+                  isClearable
+                  options={countryCityOptions}
+                  value={
+                    form.currentLocation
+                      ? { label: form.currentLocation, value: form.currentLocation }
+                      : null
+                  }
+                  onChange={(selected) =>
+                    setForm((prev) => ({ ...prev, currentLocation: selected?.value || "" }))
+                  }
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block mb-1 font-medium">Phone Number *</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="+91XXXXXXXXXX"
+                  value={form.phone}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block mb-1 font-medium">Portfolio Link</label>
+                <input
+                  type="url"
+                  name="portfolio"
+                  value={form.portfolio}
+                  onChange={handleChange}
+                  placeholder="https://yourportfolio.com"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block mb-1 font-medium">GitHub Link</label>
+                <input
+                  type="url"
+                  name="github"
+                  value={form.github}
+                  onChange={handleChange}
+                  placeholder="https://github.com/yourhandle"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </>
           )}
 
           {step === 2 && (
             <>
-              <label>Preferred Locations *</label>
-              <CreatableSelect
-                isMulti
-                options={countryCityOptions}
-                value={form.preferredLocations}
-                onChange={(selected) => setForm((prev) => ({ ...prev, preferredLocations: selected }))}
-              />
+              <div className="mb-4">
+                <label>Preferred Locations *</label>
+                <CreatableSelect
+                  isMulti
+                  options={countryCityOptions}
+                  value={form.preferredLocations}
+                  onChange={(selected) => setForm((prev) => ({ ...prev, preferredLocations: selected }))}
+                  className="w-full"
+                />
+              </div>
 
-              <label>Job Type *</label>
-              <CreatableSelect
-                isClearable
-                options={jobTypeOptions}
-                value={form.jobType ? { label: form.jobType, value: form.jobType } : null}
-                onChange={(selected) =>
-                  setForm((prev) => ({ ...prev, jobType: selected ? selected.value : "" }))
-                }
-              />
+              <div className="mb-4">
+                <label>Job Type *</label>
+                <CreatableSelect
+                  isClearable
+                  options={jobTypeOptions}
+                  value={form.jobType ? { label: form.jobType, value: form.jobType } : null}
+                  onChange={(selected) =>
+                    setForm((prev) => ({ ...prev, jobType: selected ? selected.value : "" }))
+                  }
+                  className="w-full"
+                />
+              </div>
 
-              <label>Desired Position *</label>
-              <Select
-                options={positionOptions}
-                value={positionOptions.find((opt) => opt.value === form.desiredPosition)}
-                onChange={(selected) => setForm((prev) => ({ ...prev, desiredPosition: selected.value }))}
-              />
+              <div className="mb-4">
+                <label>Desired Position *</label>
+                <Select
+                  options={positionOptions}
+                  value={positionOptions.find((opt) => opt.value === form.desiredPosition)}
+                  onChange={(selected) => setForm((prev) => ({ ...prev, desiredPosition: selected.value }))}
+                  className="w-full"
+                />
+              </div>
             </>
           )}
 
           {step === 3 && (
             <>
-              <label>Desired Salary:</label>
-              <input
-                name="desiredSalary"
-                value={form.desiredSalary}
-                onChange={handleChange}
-                placeholder="e.g., ₹6 LPA"
-              />
+              <div className="mb-4">
+                <label>Desired Salary:</label>
+                <input
+                  name="desiredSalary"
+                  value={form.desiredSalary}
+                  onChange={handleChange}
+                  placeholder="e.g., ₹6 LPA"
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                />
+              </div>
 
-              <label>Work Preference *</label>
-              <Select
-                isMulti
-                options={workPreferenceOptions}
-                value={form.workPreference}
-                onChange={(selected) => setForm((prev) => ({ ...prev, workPreference: selected }))}
-              />
+              <div className="mb-4">
+                <label>Work Preference *</label>
+                <Select
+                  isMulti
+                  options={workPreferenceOptions}
+                  value={form.workPreference}
+                  onChange={(selected) => setForm((prev) => ({ ...prev, workPreference: selected }))}
+                  className="w-full"
+                />
+              </div>
 
-              <label>Skills *</label>
-              <CreatableSelect
-                isMulti
-                options={skillOptions}
-                value={form.skills}
-                onChange={(selected) => setForm((prev) => ({ ...prev, skills: selected }))}
-              />
+              <div className="mb-4">
+                <label>Skills *</label>
+                <CreatableSelect
+                  isMulti
+                  options={skillOptions}
+                  value={form.skills}
+                  onChange={(selected) => setForm((prev) => ({ ...prev, skills: selected }))}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label>Languages</label>
+                <CreatableSelect
+                  isMulti
+                  value={form.languages.map((lang) => ({ label: lang, value: lang }))}
+                  onChange={(selected) =>
+                    setForm((prev) => ({ ...prev, languages: selected.map((s) => s.value) }))
+                  }
+                  className="w-full"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label>Certifications</label>
+                <CreatableSelect
+                  isMulti
+                  value={form.certifications.map((cert) => ({ label: cert, value: cert }))}
+                  onChange={(selected) =>
+                    setForm((prev) => ({ ...prev, certifications: selected.map((s) => s.value) }))
+                  }
+                  className="w-full"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block mb-1 font-medium">Work Experience</label>
+                {form.experience.map((exp, index) => (
+                  <div key={index} className="mb-2 border p-2 rounded">
+                    <input
+                      type="text"
+                      placeholder="Job Title"
+                      value={exp.title || ""}
+                      onChange={(e) => {
+                        const newHistory = [...form.experience];
+                        newHistory[index].title = e.target.value;
+                        setForm({ ...form, experience: newHistory });
+                      }}
+                      className="w-full mb-1 px-3 py-1 border rounded"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Company"
+                      value={exp.company || ""}
+                      onChange={(e) => {
+                        const newHistory = [...form.experience];
+                        newHistory[index].company = e.target.value;
+                        setForm({ ...form, experience: newHistory });
+                      }}
+                      className="w-full mb-1 px-3 py-1 border rounded"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Duration"
+                      value={exp.duration || ""}
+                      onChange={(e) => {
+                        const newHistory = [...form.experience];
+                        newHistory[index].duration = e.target.value;
+                        setForm({ ...form, experience: newHistory });
+                      }}
+                      className="w-full mb-1 px-3 py-1 border rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newHistory = [...form.experience];
+                        newHistory.splice(index, 1);
+                        setForm({ ...form, experience: newHistory });
+                      }}
+                      className="text-red-600 text-sm"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm({ ...form, experience: [...form.experience, { title: "", company: "", duration: "" }] })
+                  }
+                  className="text-blue-600 text-sm mt-1"
+                >
+                  + Add Experience
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <label className="block mb-1 font-medium">Education</label>
+                {form.education.map((edu, index) => (
+                  <div key={index} className="mb-2 border p-2 rounded">
+                    <input
+                      type="text"
+                      placeholder="School"
+                      value={edu.school || ""}
+                      onChange={(e) => {
+                        const newEducation = [...form.education];
+                        newEducation[index].school = e.target.value;
+                        setForm({ ...form, education: newEducation });
+                      }}
+                      className="w-full mb-1 px-3 py-1 border rounded"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Degree"
+                      value={edu.degree || ""}
+                      onChange={(e) => {
+                        const newEducation = [...form.education];
+                        newEducation[index].degree = e.target.value;
+                        setForm({ ...form, education: newEducation });
+                      }}
+                      className="w-full mb-1 px-3 py-1 border rounded"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Year"
+                      value={edu.year || ""}
+                      onChange={(e) => {
+                        const newEducation = [...form.education];
+                        newEducation[index].year = e.target.value;
+                        setForm({ ...form, education: newEducation });
+                      }}
+                      className="w-full mb-1 px-3 py-1 border rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newEducation = [...form.education];
+                        newEducation.splice(index, 1);
+                        setForm({ ...form, education: newEducation });
+                      }}
+                      className="text-red-600 text-sm"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm({ ...form, education: [...form.education, { school: "", degree: "", year: "" }] })
+                  }
+                  className="text-blue-600 text-sm mt-1"
+                >
+                  + Add Education
+                </button>
+              </div>
             </>
           )}
 

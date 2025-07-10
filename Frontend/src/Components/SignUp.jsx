@@ -20,7 +20,7 @@ export default function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-  
+
     try {
       const res = await API.post("/signup", form);
       if (res.status === 201) {
@@ -38,7 +38,6 @@ export default function SignUp() {
       }
     }
   };
-  
 
   return (
     <div className="p-4 max-w-md mx-auto">

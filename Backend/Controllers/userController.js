@@ -12,8 +12,7 @@ const baseUserSchema = z.object({
   email: z.string().email(),
   phone: z
     .string()
-    .regex(/^\+\d{1,3}\d{10}$/, "Phone must be in format +<countrycode><10-digit> (e.g., +919876543210)"),
-  resumeLink: z.string().url().optional(),
+    .regex(/^[+]?\d{10,15}$/, "Phone must be a valid international format like +919876543210"),
   currentLocation: z.string().optional(),
   preferredLocations: z.array(z.string()).optional(),
   jobType: z.string().optional(),
@@ -21,8 +20,12 @@ const baseUserSchema = z.object({
   desiredSalary: z.string().optional(),
   workPreference: z.array(z.string()).optional(),
   skills: z.array(z.string()).optional(),
-  workHistory: z.array(z.any()).optional(),
-  education: z.array(z.any()).optional()
+  portfolio: z.string().url().optional(),
+  github: z.string().url().optional(),
+  experience: z.array(z.any()).optional(),
+  education: z.array(z.any()).optional(),
+  languages: z.array(z.string()).optional(),
+  certifications: z.array(z.string()).optional()
 });
 
 const signupSchema = baseUserSchema.extend({ password: z.string().min(6) });
@@ -69,12 +72,11 @@ const login = async (req, res) => {
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
-    // ✅ Add this console to debug
     console.log("✅ Logged in user:", user);
 
     res.json({ message: 'Login successful', token, user });
   } catch (err) {
-    console.error("❌ Login backend error:", err); // <-- ADD THIS LINE
+    console.error("❌ Login backend error:", err);
     res.status(500).json({ error: 'Login failed', detail: err.message });
   }
 };
@@ -89,10 +91,15 @@ const updateUser = async (req, res) => {
     desiredPosition,
     desiredSalary,
     workPreference,
-    skills
+    skills,
+    portfolio,
+    github,
+    phone,
+    experience,
+    education,
+    languages,
+    certifications
   } = req.body;
-
-  const uploadedResumePath = req.file ? `/uploads/${req.file.filename}` : undefined;
 
   const parseArray = (input) => {
     if (!input) return [];
@@ -106,9 +113,22 @@ const updateUser = async (req, res) => {
     return Array.isArray(input) ? input : [];
   };
 
-  const parsedPreferredLocations = parseArray(preferredLocations);
-  const parsedWorkPreference = parseArray(workPreference);
-  const parsedSkills = parseArray(skills);
+  const parsedData = {
+    currentLocation,
+    preferredLocations: parseArray(preferredLocations),
+    jobType,
+    desiredPosition,
+    desiredSalary,
+    workPreference: parseArray(workPreference),
+    skills: parseArray(skills),
+    portfolio,
+    github,
+    phone,
+    experience: parseArray(experience),
+    education: parseArray(education),
+    languages: parseArray(languages),
+    certifications: parseArray(certifications)
+  };
 
   const profileSchema = z.object({
     currentLocation: z.string().min(1, "Current location is required"),
@@ -120,33 +140,17 @@ const updateUser = async (req, res) => {
     skills: z.array(z.string()).min(1, "Skills required")
   });
 
-  const parsed = profileSchema.safeParse({
-    currentLocation,
-    preferredLocations: parsedPreferredLocations,
-    jobType,
-    desiredPosition,
-    desiredSalary,
-    workPreference: parsedWorkPreference,
-    skills: parsedSkills
-  });
-
+  const parsed = profileSchema.safeParse(parsedData);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.errors });
   }
 
+  console.log("🔍 Parsed update data:", parsedData);
+
   try {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: {
-        currentLocation,
-        jobType,
-        desiredPosition,
-        desiredSalary,
-        resumeLink: uploadedResumePath,
-        preferredLocations: parsedPreferredLocations,
-        workPreference: parsedWorkPreference,
-        skills: parsedSkills
-      }
+      data: parsedData
     });
     res.json({ message: 'Profile updated', user: updatedUser });
   } catch (error) {
@@ -154,7 +158,6 @@ const updateUser = async (req, res) => {
   }
 };
 
-// ✅ Get User by ID
 const getUserById = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.params.id } });
@@ -165,7 +168,6 @@ const getUserById = async (req, res) => {
   }
 };
 
-// ✅ Get All Users (Paginated)
 const getAllUsers = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;

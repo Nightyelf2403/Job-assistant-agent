@@ -12,6 +12,8 @@ import MultiStepform from './Components/MultiStepform.jsx';
 import ResumeMatchTool from './components/ResumeMatchTool.jsx';
 import TailoredAnswerGenerator from './components/TailoredAnswerGenerator.jsx';
 import JobTracker from './Components/JobTracker.jsx';
+import AutoFillApplication from './Components/AutoFillApplication.jsx';
+
 
 import Header from './Components/Header.jsx';
 import Footer from './Components/Footer.jsx';
@@ -37,6 +39,7 @@ export default function App() {
           <Route path="/tailored-answer" element={<TailoredAnswerGenerator />} />
           <Route path="/job-tracker" element={<JobTracker />} />
           <Route path="/profile/edit" element={<MultiStepform isEditing={true} />} />
+          <Route path="/autofill/:jobId" element={<AutoFillApplication />} /> 
         </Routes>
       </main>
       <Footer />

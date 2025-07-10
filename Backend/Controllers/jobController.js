@@ -5,10 +5,13 @@ const pdfParse = require("pdf-parse");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+const userRefreshTimestamps = {}; // Tracks per-user refresh cooldowns
+global.normalJobs = [];
+
 // Helper function for extracting resume text from PDF using pdf-parse
 async function extractResumeText(resumePath) {
   try {
-    const fullPath = path.join(__dirname, '..', resumePath);
+    const fullPath = path.isAbsolute(resumePath) ? resumePath : path.join(__dirname, '..', resumePath);
     const dataBuffer = fs.readFileSync(fullPath);
     const data = await pdfParse(dataBuffer);
     if (!data.text || data.text.trim().length === 0) {
@@ -136,10 +139,20 @@ async function getStrictJsonResponse(prompt, maxAttempts = 3) {
 const getRemoteJobs = async (req, res) => {
   const userId = req.params.id;
   console.log("🔍 getRemoteJobs called for user:", userId);
-  // Serve from cache if available and not a refresh
-  if (!req.query.refresh && global.cachedJobs?.length > 0) {
-    console.log("🗂️ Serving cached jobs...");
-    return res.json({ suggestedJobs: global.cachedJobs, label: "Suggested by AI (Cached)" });
+  // Per-user refresh cooldown
+  const now = Date.now();
+  const lastRefresh = userRefreshTimestamps[userId] || 0;
+  const threeMinutes = 3 * 60 * 1000;
+
+  if (!(req.query.refresh === "true" && now - lastRefresh > threeMinutes)) {
+    console.log("⚠️ Returning cached jobs for user:", userId);
+    const suggestedByAI = (global.cachedJobs || []).filter(j => j.source === "Suggested by AI");
+    const normalJobs = (global.cachedJobs || []).filter(j => j.source === "Normal");
+    return res.json({
+      suggestedByAI,
+      normalJobs,
+      nextRefreshAt: lastRefresh + threeMinutes
+    });
   }
 
   try {
@@ -160,7 +173,7 @@ const getRemoteJobs = async (req, res) => {
         query,
         location,
         page: 1,
-        num_pages: 6,
+        num_pages: 2,
         date_posted: "all"
       },
       headers: {
@@ -171,6 +184,10 @@ const getRemoteJobs = async (req, res) => {
 
     const jobs = response.data?.data || [];
     console.log("📦 Fetched jobs from API:", jobs.length);
+
+    const aiInputJobs = jobs
+      .sort((a, b) => (b.job_description?.length || 0) - (a.job_description?.length || 0))
+      .slice(0, 10);
 
     const { jobType, currentLocation, preferredLocations, skills, desiredSalary, workPreference } = user;
     const userSummary = { jobType, currentLocation, preferredLocations, skills, desiredSalary, workPreference };
@@ -196,7 +213,7 @@ You are a JSON-only AI. Your ONLY task is to return an array of job matches from
     "job_location": "Remote"
   }
 ]
-Return at most 3 jobs only.
+Return at most 8 jobs only.
 
 Candidate Profile:
 ${JSON.stringify(userSummary, null, 2)}
@@ -205,13 +222,7 @@ Resume Extract:
 ${resumeText.slice(0, 1000)}
 
 Job Listings:
-${JSON.stringify(
-  jobs
-    .sort((a, b) => (b.job_description?.length || 0) - (a.job_description?.length || 0))
-    .slice(0, 3),
-  null,
-  2
-)}
+${JSON.stringify(aiInputJobs, null, 2)}
 `;
     let filteredJobs;
     try {
@@ -223,14 +234,10 @@ ${JSON.stringify(
       if (filteredJobs && typeof filteredJobs === 'string') {
         console.log("📉 Truncated response length:", filteredJobs.length);
       } else if (filteredJobs && Array.isArray(filteredJobs)) {
-        // If getStrictJsonResponse returns array, try to estimate original response length
         try {
           console.log("📉 Truncated response length:", JSON.stringify(filteredJobs).length);
-        } catch (e) {
-          // Fallback if stringify fails
-        }
+        } catch (e) {}
       }
-      // Ensure location and employer data are present or inferred
       filteredJobs = filteredJobs.map(match => {
         const full = jobs.find(j => j.job_id === match.job_id) || {};
 
@@ -255,19 +262,32 @@ ${JSON.stringify(
           employer_name: match.employer_name || employer,
           job_location: match.job_location || location,
           matchScore: match.matchScore,
-          reason: match.reason
+          reason: match.reason,
+          source: 'Suggested by AI'
         };
-      });
+      }).slice(0, 8);
+
+      const normalJobs = jobs.filter(j => !filteredJobs.find(fj => fj.job_id === j.job_id)).slice(0, 10).map(job => ({
+        ...job,
+        source: 'Normal'
+      }));
+
+      global.cachedJobs = [...filteredJobs, ...normalJobs];
+      userRefreshTimestamps[userId] = now;
+
       console.log("✅ Filtered jobs from AI:", filteredJobs.length);
       console.log("📋 First job sample:", JSON.stringify(filteredJobs[0], null, 2));
+
+      console.log("🚀 Returning suggested and normal jobs");
+      res.json({
+        suggestedByAI: filteredJobs,
+        normalJobs: normalJobs,
+        nextRefreshAt: now + threeMinutes
+      });
     } catch (err) {
       console.error("❌ GPT response completely unparseable or invalid:", err.message);
       return res.status(500).json({ error: "AI response was not valid JSON", detail: err.message });
     }
-
-    console.log("🚀 Returning suggested jobs");
-    global.cachedJobs = filteredJobs;
-    res.json({ suggestedJobs: filteredJobs, label: "Suggested by AI" });
   } catch (error) {
     console.error("❌ Error in getRemoteJobs:", error);
     res.status(500).json({ error: "Failed to fetch AI-filtered jobs", detail: error.message });
@@ -300,7 +320,54 @@ const saveJob = async (req, res) => {
   }
 };
 
+// ✅ Get Full Job by ID (for modal job view)
+const getSuggestedJobById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const allJobs = [...(global.cachedJobs || []), ...(global.normalJobs || [])];
+    const job = allJobs.find(j => j.job_id === id);
+    if (!job) {
+      return res.status(404).json({ error: "Job not found in cache" });
+    }
+    res.json(job);
+  } catch (error) {
+    console.error("❌ Error fetching job by ID:", error);
+    res.status(500).json({ error: "Failed to get job details" });
+  }
+};
+
+// ✅ Apply via Autofill (stores application in DB)
+const applyViaAutofill = async (req, res) => {
+  const { userId, job } = req.body;
+  if (!userId || !job?.job_id || !job?.employer_name || !job?.job_title) {
+    return res.status(400).json({ error: "Missing job or user details" });
+  }
+
+  try {
+    const applied = await prisma.application.create({
+      data: {
+        userId,
+        jobId: job.job_id,
+        title: job.job_title || "Untitled Job",
+        company: job.employer_name || "Unknown Company",
+        location: job.job_location || job.job_country || "Unknown",
+        description: job.job_description || "",
+        applyLink: job.job_apply_link || job.job_google_link || job.job_url || "",
+        status: "Applied",
+        appliedAt: new Date()
+      }
+    });
+
+    res.status(201).json({ message: "Applied successfully", application: applied });
+  } catch (error) {
+    console.error("❌ Error applying via autofill:", error);
+    res.status(500).json({ error: "Failed to apply via autofill", detail: error.message });
+  }
+};
+
 module.exports = {
   getRemoteJobs,
   saveJob,
+  getSuggestedJobById,
+  applyViaAutofill,
 };

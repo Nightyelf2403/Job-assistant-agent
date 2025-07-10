@@ -8,6 +8,8 @@ const agentRoutes = require('./routes/agentRoutes');
 const feedbackRoutes = require('./routes/feedbackRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const jobRoutes = require('./routes/jobRoutes');
+
+const applicationRoutes = require("./routes/applicationRoutes");
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient({
   datasources: {
@@ -38,6 +40,7 @@ app.use('/api', agentRoutes);
 app.use('/api', feedbackRoutes);
 app.use('/api', dashboardRoutes);
 app.use('/api', jobRoutes);
+app.use('/api/applications', applicationRoutes);
 
 app.get('/api/status', (req, res) => {
   res.json({ status: 'ok' });
@@ -52,3 +55,4 @@ app.use((err, req, res, next) => {
   console.error('Unhandled error:', err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
+

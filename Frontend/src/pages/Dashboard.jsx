@@ -1,4 +1,15 @@
 import React, { useEffect, useState, useRef } from "react";
+// Inline style for AI badge
+const aiBadgeStyle = {
+  backgroundColor: '#d4f4ff',
+  color: '#0077b6',
+  fontWeight: '600',
+  fontSize: '12px',
+  padding: '2px 6px',
+  borderRadius: '4px',
+  display: 'inline-block',
+  marginTop: '4px'
+};
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 
@@ -26,10 +37,21 @@ export default function Dashboard() {
   const [showProfile, setShowProfile] = useState(false);
   const [showInfo, setShowInfo] = useState({});
   const [suggestedJobs, setSuggestedJobs] = useState([]);
+  const [normalJobs, setNormalJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
-  const [lastFetchedTime, setLastFetchedTime] = useState(null);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [refreshCooldown, setRefreshCooldown] = useState(0);
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId");
+
+  // Recruiter questions editing state
+  const recruiterQuestions = [
+    { question: "Why do you want to work here?", answer: "I am passionate about the company's mission and values." },
+    { question: "Describe a challenging project you worked on.", answer: "I led a team to develop a scalable web app under tight deadlines." },
+    { question: "What are your strengths?", answer: "Strong problem-solving skills and excellent teamwork." }
+  ];
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedAnswers, setEditedAnswers] = useState(recruiterQuestions.map(q => q.answer));
 
   const profileRef = useRef();
 
@@ -61,37 +83,60 @@ export default function Dashboard() {
     fetchUser();
   }, []);
 
-  async function fetchJobs() {
+  async function fetchJobs(forceRefresh = false) {
     setLoadingJobs(true);
     try {
-      const res = await API.get(`/jobs/suggested/${userId}`);
-      console.log("⏱️ Time since last fetch:", Date.now() - lastFetchedTime, "ms");
-      const jobs = res.data.suggestedJobs || [];
-      console.log("📥 Received suggestedJobs from API:", jobs);
-      if (jobs.length === 0) {
-        console.warn("⚠️ No jobs returned from backend");
+      const res = await API.get(`/jobs/suggested/${userId}`, {
+        params: { refresh: forceRefresh ? "true" : "false" }
+      });
+
+      // Debug: log raw API suggested jobs
+      console.log("📦 Raw suggested jobs from API:", res.data.suggestedByAI);
+      const suggested = (res.data.suggestedByAI || []).map(job => {
+        console.log("🧠 Suggested Job:", job);
+        return {
+          ...job,
+          isAI: true,
+          matchScore: job.matchScore || job.match_score || null,
+          reason: job.reason || job.match_reason || null,
+        };
+      });
+      // Debug: log parsed suggested jobs
+      console.log("✅ Parsed suggested jobs for display:", suggested);
+      // 🐛 Debug log before setting state
+      console.log("🐛 Filtered AI Jobs Before Setting State:", suggested);
+
+      const normal = res.data.normalJobs || [];
+
+      setSuggestedJobs(suggested);
+      setNormalJobs(normal);
+
+      if (forceRefresh) {
+        setRefreshCooldown(180); // 3 minutes in seconds
       }
-      setSuggestedJobs(jobs);
-      const now = Date.now();
-      setLastFetchedTime(now);
-      localStorage.setItem("cachedSuggestedJobs", JSON.stringify(jobs));
-      localStorage.setItem("cachedSuggestedJobsTime", now.toString());
     } catch (err) {
       console.error("❌ Failed to fetch suggested jobs:", err);
     } finally {
       setLoadingJobs(false);
     }
   }
+  // Cooldown timer effect for refresh button
   useEffect(() => {
-    const cached = localStorage.getItem("cachedSuggestedJobs");
-    const cachedTime = localStorage.getItem("cachedSuggestedJobsTime");
-
-    if (cached && cachedTime && JSON.parse(cached).length > 0) {
-      setSuggestedJobs(JSON.parse(cached));
-      setLastFetchedTime(parseInt(cachedTime));
-    } else {
-      fetchJobs();
+    if (refreshCooldown > 0) {
+      const interval = setInterval(() => {
+        setRefreshCooldown(prev => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
     }
+  }, [refreshCooldown]);
+  useEffect(() => {
+    fetchJobs(false); // Only load cached jobs on initial load
   }, []);
 
   const toggleLearnMore = (agent) => {
@@ -103,6 +148,23 @@ export default function Dashboard() {
     localStorage.removeItem("userId");
     navigate("/signin");
   };
+
+  // Add useEffect to listen for Escape key to close modal
+  useEffect(() => {
+    function handleEsc(event) {
+      if (event.key === "Escape") {
+        setSelectedJob(null);
+      }
+    }
+
+    if (selectedJob) {
+      document.addEventListener("keydown", handleEsc);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, [selectedJob]);
 
   if (!user) return <div className="p-8">Loading Dashboard...</div>;
 
@@ -214,24 +276,30 @@ export default function Dashboard() {
             <h2 className="text-xl font-semibold">💼 Suggested Jobs</h2>
             <button
               onClick={() => {
-                const now = Date.now();
-                if (lastFetchedTime && Date.now() - lastFetchedTime < 3 * 60 * 1000) {
-                  alert("⏳ Reaching AI limit. Please wait 3 minutes before trying again.");
-                  return;
+                if (refreshCooldown === 0) {
+                  fetchJobs(true);
                 }
-                fetchJobs();
               }}
-              className="text-sm text-blue-600 hover:underline"
+              className={`text-sm ${refreshCooldown > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:underline'}`}
+              disabled={refreshCooldown > 0}
             >
-              🔄 Refresh
+              🔄 Refresh {refreshCooldown > 0 && `(${refreshCooldown}s)`}
             </button>
           </div>
-          {suggestedJobs.length > 0 ? (
-            loadingJobs ? (
-              <p className="text-gray-500">Loading new suggestions...</p>
-            ) : (
-              <ul className="space-y-3 text-sm text-gray-700">
+          {loadingJobs ? (
+            <p className="text-gray-500">Loading new suggestions...</p>
+          ) : suggestedJobs.length === 0 && normalJobs.length === 0 ? (
+            <p>No job suggestions yet.</p>
+          ) : (
+            <>
+              <p className="text-xs text-green-600">Showing {suggestedJobs.length} suggested and {normalJobs.length} normal jobs</p>
+              <ul className="max-h-[500px] overflow-y-auto space-y-3 text-sm text-gray-700 list-none pl-0">
+                {console.log("👁️ Rendering suggestedJobs:", suggestedJobs)}
                 {suggestedJobs.map((job, index) => {
+                  // Skip undefined or empty jobs
+                  if (!job || !job.job_title) return null;
+                  // Debug log for rendering AI job
+                  console.log("🧠 Rendering AI Job:", job);
                   const company = job.employer_name || job.company_name || job.Company || "Unknown Company";
                   const location =
                     job.job_location ||
@@ -242,20 +310,23 @@ export default function Dashboard() {
                     "Unknown Location";
 
                   return (
-                    <li key={index} className="p-3 border rounded hover:bg-gray-50">
+                    <li
+                      key={index}
+                      className="p-3 border rounded hover:bg-gray-50 cursor-pointer"
+                      onClick={() => setSelectedJob(job)}
+                    >
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="font-bold text-lg">{job.job_title || job.JobTitle}</p>
                           <p className="text-sm text-gray-600">{company}</p>
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {location}
-                        </div>
+                        <div className="text-sm text-gray-500">{location}</div>
                       </div>
                       <p className="text-xs mt-1 text-gray-500">
                         🎯 Match Score: {job.matchScore || "N/A"} <br />
                         💡 Reason: {job.reason || "Not specified"}
                       </p>
+                      {job.isAI && <span style={aiBadgeStyle}>Suggested by AI</span>}
                       {job.job_apply_link && (
                         <div className="mt-1">
                           <a
@@ -271,17 +342,111 @@ export default function Dashboard() {
                     </li>
                   );
                 })}
+
+                <h3 className="mt-4 font-semibold text-gray-800">🔎 More Jobs You Might Like</h3>
+                {normalJobs.map((job, index) => (
+                  <li
+                    key={`normal-${index}`}
+                    className="p-3 border rounded hover:bg-gray-50 cursor-pointer"
+                    onClick={() => setSelectedJob(job)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-bold text-lg">{job.job_title || job.JobTitle}</p>
+                        <p className="text-sm text-gray-600">{job.employer_name || job.company_name || "Unknown Company"}</p>
+                      </div>
+                      <div className="text-sm text-gray-500">{job.job_location || job.job_city || "Unknown Location"}</div>
+                    </div>
+                    {job.job_apply_link && (
+                      <div className="mt-1">
+                        <a
+                          href={job.job_apply_link}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 hover:underline text-sm"
+                        >
+                          View & Apply
+                        </a>
+                      </div>
+                    )}
+                  </li>
+                ))}
               </ul>
-            )
-          ) : (
-            loadingJobs ? (
-              <p className="text-gray-500">Loading new suggestions...</p>
-            ) : (
-              <p>No job suggestions yet.</p>
-            )
+            </>
           )}
         </div>
       </div>
+    {/* Modal for selected job */}
+    {selectedJob && (
+      <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center transition-opacity duration-300 ease-in-out">
+        <div className="bg-white max-w-2xl w-full p-6 rounded-lg shadow-lg overflow-y-auto max-h-[90vh] relative">
+          <button
+            className="absolute top-2 right-2 text-gray-600 hover:text-black text-xl font-bold"
+            onClick={() => setSelectedJob(null)}
+          >
+            ✕
+          </button>
+          <h2 className="text-2xl font-bold mb-2">{selectedJob.job_title || selectedJob.JobTitle}</h2>
+          <p className="text-gray-700 mb-1"><strong>Company:</strong> {selectedJob.employer_name || selectedJob.company_name || "N/A"}</p>
+          <p className="text-gray-700 mb-1"><strong>Location:</strong> {selectedJob.job_location || selectedJob.job_city || "N/A"}</p>
+          <p className="text-gray-700 mb-2"><strong>Match Score:</strong> {selectedJob.matchScore || "N/A"}</p>
+          <p className="text-sm text-gray-600 whitespace-pre-line">
+            {selectedJob.job_description || selectedJob.description || "No description available."}
+          </p>
+          {/* Recruiter Questions Review Section */}
+          <div className="mt-6 border-t pt-4">
+            <h3 className="text-lg font-semibold mb-2">Recruiter Questions Review</h3>
+            <ul className="space-y-3 text-sm text-gray-700">
+              {recruiterQuestions.map(({ question, answer }, idx) => (
+                <li key={idx}>
+                  <p className="font-semibold">{question}</p>
+                  {isEditing ? (
+                    <textarea
+                      className="w-full mt-1 p-1 border rounded"
+                      value={editedAnswers[idx]}
+                      onChange={(e) => {
+                        const newAnswers = [...editedAnswers];
+                        newAnswers[idx] = e.target.value;
+                        setEditedAnswers(newAnswers);
+                      }}
+                    />
+                  ) : (
+                    <p className="ml-2">{answer}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+              onClick={() => setIsEditing(!isEditing)}
+            >
+              {isEditing ? "Done" : "Edit"}
+            </button>
+          </div>
+          <div className="mt-4 flex gap-4">
+            <a
+              href={selectedJob.job_apply_link}
+              target="_blank"
+              rel="noreferrer"
+              className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900"
+            >
+              Apply Externally
+            </a>
+            <button
+              onClick={() => {
+                // navigate to autofill page with job details
+                localStorage.setItem("jobToApply", JSON.stringify(selectedJob));
+                navigate("/autofill");
+              }}
+              className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+            >
+              Apply via Autofill
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 }
