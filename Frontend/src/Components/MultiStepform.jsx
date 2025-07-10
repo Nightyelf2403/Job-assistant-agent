@@ -121,7 +121,13 @@ export default function MultiStepform({ isEditing = false }) {
           desiredSalary: data.desiredSalary || "",
           workPreference: data.workPreference?.map(v => ({ value: v, label: v })) || [],
           skills: data.skills?.map(v => ({ value: v, label: v })) || [],
-          resume: null,
+          resume:
+            data.resumeLink
+              ? {
+                  name: data.resumeLink.split("/").pop(),
+                  url: `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/uploads/${data.resumeLink.split("/").pop()}`
+                }
+              : null,
           phone: data.phone || "",
           portfolio: data.portfolio || "",
           github: data.github || "",
@@ -214,6 +220,28 @@ export default function MultiStepform({ isEditing = false }) {
                   onChange={handleFileChange}
                   className="block w-full border border-gray-300 rounded-lg px-4 py-2 text-sm file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
                 />
+                {form.resume && typeof form.resume === "object" && form.resume.url && (
+                  <>
+                    <div className="mt-2 text-sm text-gray-600">
+                      Current Resume:{" "}
+                      <a
+                        href={form.resume.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        {form.resume.name}
+                      </a>
+                    </div>
+                    <button
+                      type="button"
+                      className="mt-1 text-sm text-red-500 underline"
+                      onClick={() => setForm((prev) => ({ ...prev, resume: null }))}
+                    >
+                      Remove Resume
+                    </button>
+                  </>
+                )}
               </div>
 
               <div className="mb-4">

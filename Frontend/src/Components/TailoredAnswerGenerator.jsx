@@ -5,6 +5,8 @@ export default function TailoredAnswerGenerator() {
   const [jobDescription, setJobDescription] = useState('');
   const [userProfile, setUserProfile] = useState({});
   const [answer, setAnswer] = useState('');
+  const [resumeText, setResumeText] = useState('');
+  const [showFullResume, setShowFullResume] = useState(false);
 
   const handleGenerate = async () => {
     try {
@@ -13,6 +15,7 @@ export default function TailoredAnswerGenerator() {
         userProfile
       });
       setAnswer(response.data.answer);
+      setResumeText(response.data.resumeText || '');
     } catch (err) {
       console.error('Error:', err);
     }
@@ -43,6 +46,21 @@ export default function TailoredAnswerGenerator() {
         <div className="mt-6 p-6 border border-gray-300 rounded-md bg-gray-50 shadow-sm">
           <h3 className="text-xl font-semibold text-gray-700 mb-2">📝 Generated Answer</h3>
           <p className="text-gray-800 whitespace-pre-line">{answer}</p>
+        </div>
+      )}
+
+      {resumeText && (
+        <div className="mt-6 p-6 border border-gray-300 rounded-md bg-white shadow-sm">
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">📄 Extracted Resume</h3>
+          <button
+            className="text-blue-600 underline mb-2"
+            onClick={() => setShowFullResume(!showFullResume)}
+          >
+            {showFullResume ? 'Collapse' : 'Show Full Resume'}
+          </button>
+          <p className="text-gray-800 whitespace-pre-line">
+            {showFullResume ? resumeText : resumeText.slice(0, 1000) + '...'}
+          </p>
         </div>
       )}
     </div>

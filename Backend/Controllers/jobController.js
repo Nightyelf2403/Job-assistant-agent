@@ -11,7 +11,17 @@ global.normalJobs = [];
 // Helper function for extracting resume text from PDF using pdf-parse
 async function extractResumeText(resumePath) {
   try {
-    const fullPath = path.isAbsolute(resumePath) ? resumePath : path.join(__dirname, '..', resumePath);
+    const fullPath = path.isAbsolute(resumePath)
+      ? resumePath
+      : path.join(__dirname, '..', resumePath);
+
+    // Check if it's a file
+    const stat = fs.statSync(fullPath);
+    if (!stat.isFile()) {
+      console.warn("⚠️ Provided resume path is not a file:", fullPath);
+      return "";
+    }
+
     const dataBuffer = fs.readFileSync(fullPath);
     const data = await pdfParse(dataBuffer);
     if (!data.text || data.text.trim().length === 0) {
@@ -176,7 +186,10 @@ const getRemoteJobs = async (req, res) => {
     }
     console.log("✅ User found:", user);
 
+    console.log("📂 Resume path (raw):", user.resumeLink);
     const resumeText = await extractResumeText(user.resumeLink || "");
+    console.log("📄 Resume path:", user.resumeLink);
+    console.log("📄 Extracted resume text (first 9000 chars):", resumeText.slice(0, 9000));
 
     const query = user.jobType || "developer";
     const location = user.currentLocation || "remote";
@@ -232,7 +245,7 @@ Candidate Profile:
 ${JSON.stringify(userSummary, null, 2)}
 
 Resume Extract:
-${resumeText.slice(0, 1000)}
+${resumeText.slice(0, 9000)}
 
 Job Listings:
 ${JSON.stringify(aiInputJobs, null, 2)}
@@ -278,9 +291,9 @@ ${JSON.stringify(aiInputJobs, null, 2)}
           reason: match.reason,
           source: 'Suggested by AI'
         };
-      }).slice(0, 8);
+      }).slice(0, 10);
 
-      const normalJobs = jobs.filter(j => !filteredJobs.find(fj => fj.job_id === j.job_id)).slice(0, 10).map(job => ({
+      const normalJobs = jobs.filter(j => !filteredJobs.find(fj => fj.job_id === j.job_id)).slice(0, 20).map(job => ({
         ...job,
         source: 'Normal'
       }));
@@ -295,7 +308,8 @@ ${JSON.stringify(aiInputJobs, null, 2)}
       res.json({
         suggestedByAI: filteredJobs,
         normalJobs: normalJobs,
-        nextRefreshAt: now + threeMinutes
+        nextRefreshAt: now + threeMinutes,
+        resumeText: resumeText.slice(0, 9000)
       });
     } catch (err) {
       console.error("❌ GPT response completely unparseable or invalid:", err.message);

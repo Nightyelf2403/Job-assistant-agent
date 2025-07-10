@@ -129,3 +129,45 @@
   gap: 0.75rem;
   margin-top: 1rem;
 }
+
+.resume-extract-container {
+  margin-top: 2rem;
+  position: relative;
+  max-height: 300px;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  padding: 1rem;
+}
+
+.resume-extract-container.expanded {
+  max-height: none;
+}
+
+.resume-extract-fade {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3rem;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), #fff);
+  pointer-events: none;
+}
+
+.toggle-resume-text {
+  display: block;
+  margin: 0.5rem auto;
+  background-color: #4f46e5;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.toggle-resume-text:hover {
+  background-color: #4338ca;
+}

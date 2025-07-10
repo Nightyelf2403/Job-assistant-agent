@@ -12,7 +12,7 @@ const baseUserSchema = z.object({
   email: z.string().email(),
   phone: z
     .string()
-    .regex(/^[+]?\d{10,15}$/, "Phone must be a valid international format like +919876543210"),
+    .regex(/^[+]?\d{10,15}$/, "Phone must be a valid international format like +Country Code xxxxxxxxxx"),
   currentLocation: z.string().optional(),
   preferredLocations: z.array(z.string()).optional(),
   jobType: z.string().optional(),
@@ -25,7 +25,8 @@ const baseUserSchema = z.object({
   experience: z.array(z.any()).optional(),
   education: z.array(z.any()).optional(),
   languages: z.array(z.string()).optional(),
-  certifications: z.array(z.string()).optional()
+  certifications: z.array(z.string()).optional(),
+  resumeLink: z.string().optional()
 });
 
 const signupSchema = baseUserSchema.extend({ password: z.string().min(6) });
@@ -101,6 +102,11 @@ const updateUser = async (req, res) => {
     certifications
   } = req.body;
 
+  const filePath = req.file ? `uploads/${req.file.filename}` : null;
+
+  // Preserve previous resume if no new file is uploaded
+  const existingUser = await prisma.user.findUnique({ where: { id: userId } });
+
   const parseArray = (input) => {
     if (!input) return [];
     if (typeof input === 'string') {
@@ -113,6 +119,7 @@ const updateUser = async (req, res) => {
     return Array.isArray(input) ? input : [];
   };
 
+  console.log("📄 Resume uploaded path:", filePath);
   const parsedData = {
     currentLocation,
     preferredLocations: parseArray(preferredLocations),
@@ -127,7 +134,8 @@ const updateUser = async (req, res) => {
     experience: parseArray(experience),
     education: parseArray(education),
     languages: parseArray(languages),
-    certifications: parseArray(certifications)
+    certifications: parseArray(certifications),
+    resumeLink: filePath !== null ? filePath : existingUser.resumeLink,
   };
 
   const profileSchema = z.object({

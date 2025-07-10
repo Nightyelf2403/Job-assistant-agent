@@ -72,6 +72,7 @@ exports.analyzeResume = async (req, res) => {
 
   try {
     const data = await pdfParse(file.buffer);
+    const resumeText = data.text.slice(0, 9000); // limit to 9000 characters explicitly
     const messages = [
       {
         role: 'system',
@@ -91,7 +92,7 @@ Respond ONLY in this JSON format:
 }
 
 Resume:
-${data.text}
+${resumeText}
 
 Job Description:
 ${jobDescription}`
@@ -120,7 +121,7 @@ ${jobDescription}`
       console.error('JSON parse error in analyzeResume:', parseErr);
       return res.status(500).json({ error: 'Failed to parse AI response' });
     }
-    res.json(json);
+    res.json({ ...json, resumeText });
   } catch (err) {
     console.error('Resume analysis error:', err);
     res.status(500).json({ error: 'Failed to analyze resume' });

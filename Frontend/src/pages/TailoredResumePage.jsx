@@ -5,6 +5,8 @@ import "../styles/TailoredResumePage.css";
 const TailoredResumePage = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [resumeData, setResumeData] = useState(null);
+  const [rawResumeText, setRawResumeText] = useState("");
+  const [showFullText, setShowFullText] = useState(false);
 
   useEffect(() => {
     const fetchResume = async () => {
@@ -20,6 +22,7 @@ const TailoredResumePage = () => {
           year: user.gradYear || ''
         };
         setResumeData(formatted);
+        if (user.resumeText) setRawResumeText(user.resumeText);
       } catch (err) {
         console.error("❌ Failed to fetch resume data:", err);
       }
@@ -92,6 +95,19 @@ const TailoredResumePage = () => {
               <p><b>Education</b><br />{resumeData.education} - {resumeData.university}, {resumeData.year}</p>
             </div>
           )}
+          <div className="raw-resume-text">
+            <h4>Full Extracted Resume Text</h4>
+            {rawResumeText.length > 0 && (
+              <>
+                <div className={`resume-text-container ${showFullText ? 'expanded' : 'collapsed'}`}>
+                  <pre>{showFullText ? rawResumeText : rawResumeText.slice(0, 1000) + "..."}</pre>
+                </div>
+                <button onClick={() => setShowFullText(!showFullText)} className="toggle-btn">
+                  {showFullText ? "Show Less" : "Show More"}
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="score-answer-section">
