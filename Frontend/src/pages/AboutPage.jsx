@@ -25,6 +25,19 @@ export default function AboutPage() {
       <p className="text-gray-700">
         To empower job seekers with smart tools that make applying for jobs easier, faster, and more effective — no matter where you're starting from.
       </p>
+      <div className="mt-10 border-t pt-6 text-gray-700">
+        <h2 className="text-2xl font-semibold mb-2">📬 Contact & Issues</h2>
+        <p className="mb-2">For support or questions, feel free to reach out:</p>
+        <ul className="list-disc list-inside">
+          <li>Email: <a href="mailto:adiaditya7907@gmail.com" className="text-blue-600 hover:underline">adiaditya7907@gmail.com</a></li>
+          <li>GitHub: <a href="https://github.com/Nightyelf2403" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Nightyelf2403</a></li>
+          <li>LinkedIn: <a href="https://www.linkedin.com/in/lalith-aditya-chunduri-76573421a/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Lalith Aditya Chunduri</a></li>
+        </ul>
+      </div>
+
+      <div className="mt-10 border-t pt-6 text-center text-sm text-gray-600 italic">
+        Created by <span className="font-semibold text-black">Lalith Aditya Chunduri</span> — with ❤️ and React.
+      </div>
     </div>
   );
 }
