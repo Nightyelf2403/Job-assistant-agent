@@ -71,15 +71,26 @@ export default function AutoFillApplication() {
 
         <section>
           <h3 className="font-semibold text-lg">Company News</h3>
-          <ul className="text-sm text-gray-700 space-y-1">
-            {job.companyInsights?.map((news, i) => (
-              <li key={i}>
-                <a href={news.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                  {news.title}
-                </a>
-              </li>
-            ))}
-          </ul>
+          {Array.isArray(job.companyInsights) && job.companyInsights.length > 0 ? (
+            <ul className="text-sm text-gray-700 space-y-1">
+              {job.companyInsights.map((news, i) =>
+                news?.title && (news.link || news.url) ? (
+                  <li key={i}>
+                    <a
+                      href={news.link || news.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {news.title}
+                    </a>
+                  </li>
+                ) : null
+              )}
+            </ul>
+          ) : (
+            <p className="text-sm text-gray-500">No recent company news available.</p>
+          )}
         </section>
       </div>
 

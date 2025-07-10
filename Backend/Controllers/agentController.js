@@ -10,9 +10,14 @@ exports.generateAnswer = async (req, res) => {
     return res.status(400).json({ error: 'Missing job description or user profile' });
   }
 
-  const prompt = `
-You are a helpful assistant that writes personalized answers to job application questions.
-
+  const messages = [
+    {
+      role: 'system',
+      content: 'You are a helpful assistant that writes personalized answers to job application questions.'
+    },
+    {
+      role: 'user',
+      content: `
 Job Description:
 ${jobDescription}
 
@@ -20,22 +25,40 @@ User Profile:
 ${JSON.stringify(userProfile)}
 
 Generate a short, professional answer to: "Why are you a good fit for this role?"
+
 Respond ONLY in this JSON format:
 {
   "answer": "<your generated answer>"
-}
-`;
+}`
+    }
+  ];
 
   try {
-    const response = await axios.post('http://localhost:11434/api/generate', {
-      model: 'mistral',
-      prompt,
-      stream: false
-    });
+    const response = await axios.post(
+      'https://adihub3504002192.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview',
+      {
+        messages,
+        temperature: 0.7
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': process.env.AZURE_API_KEY
+        }
+      }
+    );
 
-    const json = JSON.parse(response.data.response);
+    const message = response.data.choices[0]?.message?.content;
+    let json;
+    try {
+      json = JSON.parse(message);
+    } catch (parseErr) {
+      console.error('JSON parse error in generateAnswer:', parseErr);
+      return res.status(500).json({ error: 'Failed to parse AI response' });
+    }
     res.json(json);
   } catch (err) {
+    console.error('Answer generation error:', err);
     res.status(500).json({ error: 'Failed to generate answer' });
   }
 };
@@ -49,9 +72,14 @@ exports.analyzeResume = async (req, res) => {
 
   try {
     const data = await pdfParse(file.buffer);
-    const prompt = `
-You are a resume scoring assistant.
-
+    const messages = [
+      {
+        role: 'system',
+        content: 'You are a resume scoring assistant.'
+      },
+      {
+        role: 'user',
+        content: `
 Given the resume and job description below, provide:
 1. A match score from 0–100
 2. 3 short insights on how to improve
@@ -66,18 +94,35 @@ Resume:
 ${data.text}
 
 Job Description:
-${jobDescription}
-`;
+${jobDescription}`
+      }
+    ];
 
-    const response = await axios.post('http://localhost:11434/api/generate', {
-      model: 'mistral',
-      prompt,
-      stream: false
-    });
+    const response = await axios.post(
+      'https://adihub3504002192.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview',
+      {
+        messages,
+        temperature: 0.7
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': process.env.AZURE_API_KEY
+        }
+      }
+    );
 
-    const json = JSON.parse(response.data.response);
+    const message = response.data.choices[0]?.message?.content;
+    let json;
+    try {
+      json = JSON.parse(message);
+    } catch (parseErr) {
+      console.error('JSON parse error in analyzeResume:', parseErr);
+      return res.status(500).json({ error: 'Failed to parse AI response' });
+    }
     res.json(json);
   } catch (err) {
+    console.error('Resume analysis error:', err);
     res.status(500).json({ error: 'Failed to analyze resume' });
   }
 };
