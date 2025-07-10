@@ -1,11 +1,36 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState(null);
+  const [showThankYou, setShowThankYou] = useState(false);
   const navigate = useNavigate();
+
+  const profileRef = useRef();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfile(false);
+      }
+    };
+
+    const handleEsc = (event) => {
+      if (event.key === "Escape") {
+        setShowProfile(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEsc);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, []);
 
   useEffect(() => {
     setIsLoggedIn(!!localStorage.getItem("token"));
@@ -33,43 +58,50 @@ export default function Header() {
     if (isLoggedIn) fetchUser();
   }, [isLoggedIn]);
 
+  useEffect(() => {
+    if (showThankYou) {
+      const timer = setTimeout(() => setShowThankYou(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showThankYou]);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
     setIsLoggedIn(false);
-    navigate("/signin");
+    setShowThankYou(true);
+    navigate("/");
   };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-gray-50 shadow-md px-8 py-4 flex justify-between items-center">
+      {showThankYou && (
+        <div className="absolute top-16 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-md shadow-lg transition-all animate-fadeInOut z-50">
+          Thank you!
+        </div>
+      )}
       <Link to="/" className="text-2xl font-extrabold text-indigo-700 hover:text-indigo-800 transition-colors">
         Job Assistant
       </Link>
       <div className="flex items-center space-x-6">
         <Link
           to="/"
-          className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
+          className="text-sm font-semibold text-gray-700 hover:text-indigo-700 hover:underline transition duration-200"
         >
           Home
         </Link>
         <Link
           to="/dashboard"
-          className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
+          className="text-sm font-semibold text-gray-700 hover:text-indigo-700 hover:underline transition duration-200"
         >
           Dashboard
         </Link>
-        <Link
-          to="/resume-score"
-          className="px-4 py-2 rounded-md font-medium text-sm transition-colors text-indigo-600 hover:bg-indigo-50 border border-indigo-600"
-        >
-          Tailor Resume
-        </Link>
         {isLoggedIn ? (
           <>
-            <div className="relative">
+            <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setShowProfile(prev => !prev)}
-                className="px-4 py-2 rounded-md font-medium text-sm transition-colors text-indigo-600 hover:bg-indigo-50 border border-indigo-600"
+                className="px-4 py-2 rounded-full font-semibold text-sm text-indigo-600 border border-indigo-600 hover:bg-indigo-50 transition-all"
               >
                 Profile
               </button>
@@ -110,22 +142,28 @@ export default function Header() {
             </div>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 rounded-md font-medium text-sm transition-colors bg-red-500 text-white hover:bg-red-600 border border-red-500"
+              className="px-4 py-2 rounded-full font-semibold text-sm text-white bg-red-500 hover:bg-red-600 transition-all shadow-md"
             >
               Logout
             </button>
+            <Link
+              to="/resume-score"
+              className="px-4 py-2 rounded-full font-semibold text-sm transition-all text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 shadow-md"
+            >
+              Tailor Resume
+            </Link>
           </>
         ) : (
           <>
             <Link
               to="/signin"
-              className="px-4 py-2 rounded-md font-medium text-sm transition-colors text-indigo-600 hover:bg-indigo-50 border border-indigo-600"
+              className="px-4 py-2 rounded-full font-semibold text-sm text-indigo-600 border border-indigo-600 hover:bg-indigo-50 transition-all"
             >
               Sign In
             </Link>
             <Link
               to="/signup"
-              className="px-4 py-2 rounded-md font-medium text-sm transition-colors bg-indigo-600 text-white hover:bg-indigo-700 border border-indigo-600"
+              className="px-4 py-2 rounded-full font-semibold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-md"
             >
               Sign Up
             </Link>

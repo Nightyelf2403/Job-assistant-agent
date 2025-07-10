@@ -12,6 +12,8 @@
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
   font-weight: 600;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 0.5rem;
 }
 
 .section textarea {
@@ -39,9 +41,9 @@
 
 .resume-card {
   background-color: #f8f9fb;
-  padding: 1.2rem;
+  padding: 1.5rem;
   border-radius: 12px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #e5e7eb;
   line-height: 1.5;
 }
 
@@ -54,19 +56,19 @@
 }
 
 .score-box {
-  background: #f1f8ff;
+  background: #eaf4ff;
   padding: 1rem;
   border-radius: 12px;
   border: 1px solid #d0e7ff;
 }
 
 .score-circle {
-  width: 90px;
-  height: 90px;
+  width: 100px;
+  height: 100px;
   background-color: #007bff;
   color: white;
-  font-weight: bold;
-  font-size: 1.3rem;
+  font-weight: 700;
+  font-size: 1.5rem;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -80,6 +82,8 @@
   border-radius: 8px;
   border: 1px solid #ccc;
   margin-bottom: 0.5rem;
+  font-size: 1rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .ai-question-box button {
@@ -89,6 +93,11 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.ai-question-box button:hover {
+  background-color: #0056b3;
 }
 
 .ai-answer {

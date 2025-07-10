@@ -5,7 +5,7 @@ const {
   analyzeResume,
   submitFeedback,
   generateRecruiterAnswers,
-  generateResumeScore,
+  
 } = require('../controllers/agentController');
 
 const router = express.Router();
@@ -15,7 +15,7 @@ router.post('/generate/answer', generateAnswer);
 router.post('/resume/analyze', upload.single('resume'), analyzeResume);
 router.post('/feedback', submitFeedback); // Optional feedback
 router.post('/generate/recruiter-answers', generateRecruiterAnswers);
-router.post('/tailored/score', generateResumeScore);
+
 
 
 module.exports = router;

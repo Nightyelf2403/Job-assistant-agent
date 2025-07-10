@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 // Inline style for AI badge
 const aiBadgeStyle = {
   backgroundColor: '#d4f4ff',
@@ -34,7 +34,6 @@ function TypingText({ text }) {
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
-  const [showProfile, setShowProfile] = useState(false);
   const [showInfo, setShowInfo] = useState({});
   const [suggestedJobs, setSuggestedJobs] = useState([]);
   const [normalJobs, setNormalJobs] = useState([]);
@@ -53,23 +52,6 @@ export default function Dashboard() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedAnswers, setEditedAnswers] = useState(recruiterQuestions.map(q => q.answer));
 
-  const profileRef = useRef();
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (profileRef.current && !profileRef.current.contains(event.target)) {
-        setShowProfile(false);
-      }
-    }
-
-    if (showProfile) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showProfile]);
 
   useEffect(() => {
     async function fetchUser() {
@@ -168,67 +150,45 @@ export default function Dashboard() {
 
   if (!user) return <div className="p-8">Sign-In or Sign-Up To View DashBoard!!...</div>;
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
+return (
+    <div className="min-h-screen bg-gray-50 p-6 space-y-8 text-gray-800 leading-relaxed tracking-wide">
       {/* Header */}
       <div className="flex justify-between items-center border-b pb-4">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h2 className="text-2xl font-bold">Welcome back, {user?.name?.split(" ")[0]} 👋</h2>
       </div>
 
-      {/* Profile Panel */}
-      {showProfile && (
-        <div ref={profileRef} className="bg-white rounded shadow p-4 w-full max-w-3xl mx-auto">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-full bg-black" />
-            <div>
-              <h2 className="text-lg font-bold">{user.name}</h2>
-              <p>Email: {user.email}</p>
-              <p>Phone: {user.phone}</p>
-            </div>
-          </div>
-          <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-            <p><strong>Location:</strong> {user.currentLocation || "N/A"}</p>
-            <p><strong>Preferred Locations:</strong> {user.preferredLocations?.join(", ") || "N/A"}</p>
-            <p><strong>Job Type:</strong> {user.jobType || "N/A"}</p>
-            <p><strong>Desired Position:</strong> {user.desiredPosition || "N/A"}</p>
-            <p><strong>Work Preference:</strong> {Array.isArray(user.workPreference) ? user.workPreference.join(", ") : "N/A"}</p>
-            <p><strong>Skills:</strong> {user.skills?.join(", ") || "N/A"}</p>
-          </div>
-          <button
-            onClick={() => {
-              setShowProfile(false);
-              navigate("/profile/edit");
-            }}
-            className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded"
-          >
-            Edit Profile
-          </button>
-        </div>
-      )}
-
       {/* Agent Cards */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="font-semibold text-lg">🧠 Autofill Agent</h3>
-          <button className="mt-2 text-blue-600" onClick={() => toggleLearnMore("autofill")}>Learn more</button>
-          {showInfo.autofill && (
-            <TypingText text="Automatically fills application forms using your saved details." />
-          )}
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="font-semibold text-lg">📊 Resume-to-JD Score Agent</h3>
-          <button className="mt-2 text-blue-600" onClick={() => toggleLearnMore("score")}>Learn more</button>
-          {showInfo.score && (
-            <TypingText text="Compares your resume against job descriptions for match quality." />
-          )}
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="font-semibold text-lg">📝 Tailored Answer Agent</h3>
-          <button className="mt-2 text-blue-600" onClick={() => toggleLearnMore("answer")}>Learn more</button>
-          {showInfo.answer && (
-            <TypingText text="Creates personalized responses for job application questions." />
-          )}
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {[
+          { title: "Autofill Agent", icon: "🧠", desc: "Apply with saved data", key: "autofill" },
+          { title: "Resume-to-JD Score Agent", icon: "📊", desc: "See match score", key: "score" },
+          { title: "Tailored Answer Agent", icon: "✍️", desc: "Generate answers", key: "answer" }
+        ].map((agent) => (
+          <div
+            key={agent.key}
+            className="bg-white p-5 rounded-2xl shadow-md border hover:shadow-lg hover:scale-105 transition duration-300 ease-in-out"
+          >
+            <h3 className="text-lg font-semibold">{agent.icon} {agent.title}</h3>
+            <p className="text-sm mt-2 text-gray-600">{agent.desc}</p>
+            <button
+              className="mt-3 text-indigo-600 hover:underline"
+              onClick={() => toggleLearnMore(agent.key)}
+            >
+              Learn more
+            </button>
+            {showInfo[agent.key] && (
+              <TypingText
+                text={
+                  agent.key === "autofill"
+                    ? "Automatically fills application forms using your saved details."
+                    : agent.key === "score"
+                    ? "Compares your resume against job descriptions for match quality."
+                    : "Creates personalized responses for job application questions."
+                }
+              />
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Main Layout: Applications + Suggested Jobs */}
@@ -251,19 +211,28 @@ export default function Dashboard() {
                   <td className="px-4 py-2">Software Intern</td>
                   <td className="px-4 py-2">Google</td>
                   <td className="px-4 py-2">2025-07-01</td>
-                  <td className="px-4 py-2 text-green-600">✅ Applied</td>
+                  <td className="px-4 py-2 text-green-600">
+                    ✅ Applied
+                    <progress value="100" max="100" className="w-full h-2 rounded bg-gray-200 text-green-600 mt-1" />
+                  </td>
                 </tr>
                 <tr className="bg-white border-b">
                   <td className="px-4 py-2">ML Intern</td>
                   <td className="px-4 py-2">Meta</td>
                   <td className="px-4 py-2">2025-07-02</td>
-                  <td className="px-4 py-2 text-yellow-600">⏳ Awaiting</td>
+                  <td className="px-4 py-2 text-yellow-600">
+                    ⏳ Awaiting
+                    <progress value="50" max="100" className="w-full h-2 rounded bg-gray-200 text-yellow-600 mt-1" />
+                  </td>
                 </tr>
                 <tr className="bg-white">
                   <td className="px-4 py-2">Frontend Developer</td>
                   <td className="px-4 py-2">Amazon</td>
                   <td className="px-4 py-2">2025-07-03</td>
-                  <td className="px-4 py-2 text-red-600">❌ Rejected</td>
+                  <td className="px-4 py-2 text-red-600">
+                    ❌ Rejected
+                    <progress value="0" max="100" className="w-full h-2 rounded bg-gray-200 text-red-600 mt-1" />
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -378,7 +347,7 @@ export default function Dashboard() {
       </div>
     {/* Modal for selected job */}
     {selectedJob && (
-      <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center transition-opacity duration-300 ease-in-out">
+      <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center animate-fadeIn">
         <div className="bg-white max-w-2xl w-full p-6 rounded-lg shadow-lg overflow-y-auto max-h-[90vh] relative">
           <button
             className="absolute top-2 right-2 text-gray-600 hover:text-black text-xl font-bold"
