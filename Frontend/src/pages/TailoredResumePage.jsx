@@ -4,32 +4,91 @@ import "../styles/TailoredResumePage.css";
 
 const TailoredResumePage = () => {
   const [jobDescription, setJobDescription] = useState("");
-  const [resumeData, setResumeData] = useState(null);
   const [rawResumeText, setRawResumeText] = useState("");
   const [showFullText, setShowFullText] = useState(false);
 
   useEffect(() => {
     const fetchResume = async () => {
       try {
-        const res = await axios.get('http://localhost:5050/api/users/me'); // adjust URL if needed
-        const user = res.data;
-        const formatted = {
-          name: user.name,
-          email: user.email,
-          workHistory: user.experience || [],
-          education: user.education || 'Not specified',
-          university: user.college || 'Not specified',
-          year: user.gradYear || ''
+        const token = localStorage.getItem("token");
+        if (!token) {
+          console.error("No auth token found.");
+          return;
+        }
+
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const decodedPayload = JSON.parse(window.atob(base64));
+        const userId = decodedPayload.userId;
+
+        // Helper to trigger resume extraction
+        const triggerResumeExtraction = async () => {
+          try {
+            await axios.post(`http://localhost:5050/api/users/${userId}/extract-resume`, {}, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+          } catch (err) {
+            console.error("❌ Failed to trigger resume extraction:", err);
+          }
         };
-        setResumeData(formatted);
-        if (user.resumeText) setRawResumeText(user.resumeText);
+
+        const res = await axios.get(`http://localhost:5050/api/users/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        const user = res.data;
+
+        if (user.resumeText) {
+          setRawResumeText(user.resumeText);
+        } else {
+          console.warn("No resumeText found, triggering extraction...");
+          await triggerResumeExtraction();
+          // Re-fetch user after extraction
+          const recheck = await axios.get(`http://localhost:5050/api/users/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (recheck.data.resumeText) {
+            setRawResumeText(recheck.data.resumeText);
+          } else {
+            setRawResumeText("Resume extraction failed or is still processing.");
+          }
+        }
       } catch (err) {
-        console.error("❌ Failed to fetch resume data:", err);
+        console.error("❌ Failed to fetch or trigger resume extraction:", err);
       }
     };
 
     fetchResume();
   }, []);
+
+  const handleFetchResumeText = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No auth token found.");
+        return;
+      }
+
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const decodedPayload = JSON.parse(window.atob(base64));
+      const userId = decodedPayload.userId;
+
+      const res = await axios.get(`http://localhost:5050/api/users/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const user = res.data;
+      if (user.resumeText) setRawResumeText(user.resumeText);
+      else setRawResumeText("No resume text found.");
+    } catch (err) {
+      console.error("❌ Failed to fetch resume text:", err);
+      setRawResumeText("Error fetching resume text.");
+    }
+  };
 
   const [matchScore, setMatchScore] = useState(85);
   const [scoreReasons, setScoreReasons] = useState([
@@ -41,11 +100,11 @@ const TailoredResumePage = () => {
   const [aiResponse, setAiResponse] = useState("");
 
   const handleAskAI = async () => {
-    if (!customQuestion || !resumeData || !jobDescription) return;
+    if (!customQuestion || !rawResumeText || !jobDescription) return;
 
     try {
       const res = await axios.post('http://localhost:5050/api/tailored/ask', {
-        resumeText: JSON.stringify(resumeData),
+        resumeText: rawResumeText,
         jobDescription,
         question: customQuestion
       });
@@ -59,7 +118,7 @@ const TailoredResumePage = () => {
   const evaluateScore = async () => {
     try {
       const res = await axios.post('http://localhost:5050/api/tailored/score', {
-        resumeText: JSON.stringify(resumeData),
+        resumeText: rawResumeText,
         jobDescription
       });
       setMatchScore(res.data.score);
@@ -86,18 +145,11 @@ const TailoredResumePage = () => {
       <div className="grid-section">
         <div className="resume-view">
           <h4>Extracted Resume View</h4>
-          {resumeData && (
-            <div className="resume-card">
-              <b>{resumeData.name}</b>
-              <p><b>Contact</b><br />{resumeData.name}</p>
-              <p><b>Email</b><br />{resumeData.email}</p>
-              <p><b>Work History</b><br />{resumeData.workHistory[0]?.role} <span>{resumeData.workHistory[0]?.years}</span><br />{resumeData.workHistory[0]?.desc}</p>
-              <p><b>Education</b><br />{resumeData.education} - {resumeData.university}, {resumeData.year}</p>
-            </div>
-          )}
+          <button onClick={handleFetchResumeText} className="fetch-btn">
+            Fetch Extracted Resume
+          </button>
           <div className="raw-resume-text">
-            <h4>Full Extracted Resume Text</h4>
-            {rawResumeText.length > 0 && (
+            {rawResumeText ? (
               <>
                 <div className={`resume-text-container ${showFullText ? 'expanded' : 'collapsed'}`}>
                   <pre>{showFullText ? rawResumeText : rawResumeText.slice(0, 1000) + "..."}</pre>
@@ -106,6 +158,8 @@ const TailoredResumePage = () => {
                   {showFullText ? "Show Less" : "Show More"}
                 </button>
               </>
+            ) : (
+              <p>No extracted resume text available.</p>
             )}
           </div>
         </div>

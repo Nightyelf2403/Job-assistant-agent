@@ -10,6 +10,7 @@ const {
   getUserById,
   getAllUsers,
   getCurrentUser,
+  extractResumeForUser,
 } = require('../controllers/userController');
 
 // Set up Multer for file uploads (e.g., resume)
@@ -30,5 +31,6 @@ router.get('/users/:id', getUserById);
 router.get('/users', getAllUsers);
 
 router.get('/me', authenticateToken, getCurrentUser);
+router.post('/:id/extract-resume',authenticateToken, extractResumeForUser);
 
 module.exports = router;

@@ -21,6 +21,20 @@ export default function TailoredAnswerGenerator() {
     }
   };
 
+  const handleExtractResume = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:5050/api/users/extract-resume", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setResumeText(res.data.resumeText || '');
+    } catch (err) {
+      console.error("Resume extraction failed:", err);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-3xl font-semibold text-gray-800 mb-6">🎯 Tailored Answer Generator</h2>
@@ -40,6 +54,12 @@ export default function TailoredAnswerGenerator() {
         className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded transition-all"
       >
         Generate Answer
+      </button>
+      <button
+        onClick={handleExtractResume}
+        className="ml-4 bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-2 rounded transition-all"
+      >
+        Force Extract Resume
       </button>
 
       {answer && (

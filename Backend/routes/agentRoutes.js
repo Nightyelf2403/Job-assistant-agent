@@ -5,6 +5,7 @@ const {
   analyzeResume,
   submitFeedback,
   generateRecruiterAnswers,
+  scoreResumeAgainstJD,
   
 } = require('../controllers/agentController');
 
@@ -15,6 +16,7 @@ router.post('/generate/answer', generateAnswer);
 router.post('/resume/analyze', upload.single('resume'), analyzeResume);
 router.post('/feedback', submitFeedback); // Optional feedback
 router.post('/generate/recruiter-answers', generateRecruiterAnswers);
+router.post('/score', scoreResumeAgainstJD);
 
 
 

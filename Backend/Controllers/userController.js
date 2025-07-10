@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+const pdfParse = require('pdf-parse');
 const { PrismaClient } = require('@prisma/client');
 const { z } = require('zod');
 const bcrypt = require('bcryptjs');
@@ -170,6 +173,28 @@ const getUserById = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.params.id } });
     if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Extract resume text if not already present but resumeLink exists
+    if (!user.resumeText && user.resumeLink) {
+      const resumePath = path.join(__dirname, '../', user.resumeLink);
+      if (fs.existsSync(resumePath)) {
+        try {
+          const dataBuffer = fs.readFileSync(resumePath);
+          const pdfData = await pdfParse(dataBuffer);
+          const extractedText = pdfData.text.slice(0, 9000); // limit to 9000 chars
+          await prisma.user.update({
+            where: { id: req.params.id },
+            data: { resumeText: extractedText }
+          });
+          user.resumeText = extractedText;
+        } catch (err) {
+          console.error("❌ Failed to extract resume text:", err);
+        }
+      } else {
+        console.warn("⚠️ Resume file not found at:", resumePath);
+      }
+    }
+
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch user', detail: error.message });
@@ -204,11 +229,42 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
+// ✅ Extract Resume For User
+const extractResumeForUser = async (req, res) => {
+  const userId = req.params.id;
+  try {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.resumeLink) {
+      return res.status(404).json({ message: "No resume found for this user." });
+    }
+
+    const resumePath = path.join(__dirname, '../', user.resumeLink);
+    if (!fs.existsSync(resumePath)) {
+      return res.status(404).json({ message: "Resume file not found." });
+    }
+
+    const dataBuffer = fs.readFileSync(resumePath);
+    const pdfData = await pdfParse(dataBuffer);
+    const extractedText = pdfData.text.slice(0, 9000); // up to 9000 characters
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { resumeText: extractedText }
+    });
+
+    res.json({ success: true, resumeText: extractedText });
+  } catch (err) {
+    console.error("❌ Resume extract error:", err);
+    res.status(500).json({ message: "Resume extraction failed." });
+  }
+};
+
 module.exports = {
   signup,
   login,
   updateUser,
   getUserById,
   getAllUsers,
-  getCurrentUser
+  getCurrentUser,
+  extractResumeForUser
 };
