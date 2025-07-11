@@ -23,14 +23,13 @@ const upload = multer({ storage });
 
 // 🟢 Public routes
 router.post('/signup', signup);
-router.post('/login', login);
+router.post('/login', login); // ✅ Login route
 
 // 🔐 User profile routes
+router.get('/me', authenticateToken, getCurrentUser);
 router.put('/users/:id', upload.single('resume'), updateUser);
 router.get('/users/:id', getUserById);
 router.get('/users', getAllUsers);
-
-router.get('/me', authenticateToken, getCurrentUser);
-router.post('/:id/extract-resume',authenticateToken, extractResumeForUser);
+router.post('/:id/extract-resume', authenticateToken, extractResumeForUser);
 
 module.exports = router;

@@ -54,13 +54,14 @@ model Application {
 }
 
 model SuggestedJob {
-  id        String   @id @default(cuid())
-  title     String
-  company   String
-  location  String
-  userId    String
-  isAI      Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  title       String
+  company     String
+  location    String
+  description String  
+  userId      String
+  isAI        Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
 }

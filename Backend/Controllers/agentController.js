@@ -49,6 +49,12 @@ Respond ONLY in this JSON format:
     );
 
     const message = response.data.choices[0]?.message?.content;
+    console.log('🧠 AI raw response for generateAnswer:', message);
+    console.log('🔍 GPT raw answer response:', message);
+    // fallback if message is missing or empty
+    if (!message) {
+      return res.status(500).json({ error: 'AI returned empty response' });
+    }
     let json;
     try {
       json = JSON.parse(message);
@@ -162,14 +168,49 @@ exports.generateRecruiterAnswers = async (req, res) => {
     return res.status(400).json({ error: 'Missing jobId, userId, or questions' });
   }
 
-  const job = await prisma.savedJob.findFirst({
+  const job = await prisma.suggestedJob.findFirst({
     where: { id: jobId },
-    select: { description: true }
+    select: { title: true, company: true, location: true, description: true }
   });
 
   const user = await prisma.user.findUnique({
     where: { id: userId }
   });
+
+  console.log('📝 Job fetched for answers:', job);
+  console.log('👤 User profile fetched:', user);
+
+  if (!job || !user) {
+    console.error('❌ Job or User not found for recruiter answer generation.');
+    return res.status(404).json({ error: 'Job or user not found' });
+  }
+
+  // Ensure job is saved in SuggestedJob table for tracking (avoid duplicate save if exists)
+  try {
+    const existing = await prisma.suggestedJob.findUnique({
+      where: { id: jobId }
+    });
+
+    if (!existing) {
+      await prisma.suggestedJob.create({
+        data: {
+          id: jobId,
+          userId: userId,
+          title: job.title,
+          company: job.company,
+          location: job.location,
+          description: job.description,
+          isAI: true,
+          status: 'pending' // or 'suggested' if you prefer
+        }
+      });
+      console.log("✅ New suggested job saved for Application Tracker.");
+    } else {
+      console.log("ℹ️ Suggested job already exists, skipping save.");
+    }
+  } catch (saveErr) {
+    console.error("⚠️ Failed to save suggested job:", saveErr);
+  }
 
   const jobDescription = job?.description || '';
   const userProfile = user || {};
@@ -224,7 +265,56 @@ Respond ONLY in this JSON format:
       console.error('JSON parse error in generateRecruiterAnswers:', parseErr);
       return res.status(500).json({ error: 'Failed to parse AI response' });
     }
-    res.json(json);
+    const recruiterAnswers = json;
+
+    // Generate cover letter
+    let coverLetter = '';
+    try {
+      const coverRes = await axios.post(
+        'https://adihub3504002192.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview',
+        {
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a professional job assistant AI that writes strong, personalized cover letters.'
+            },
+            {
+              role: 'user',
+              content: `Here is the resume:\n${user.resumeText || ''}\n\nAnd here is the job description:\n${jobDescription}\n\nWrite a tailored cover letter.`
+            }
+          ],
+          temperature: 0.7
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'api-key': process.env.AZURE_API_KEY
+          }
+        }
+      );
+      coverLetter = coverRes.data.choices[0]?.message?.content || '';
+    } catch (err) {
+      console.error("⚠️ Cover letter generation failed:", err);
+    }
+
+    // Save to Application table
+    try {
+      await prisma.application.create({
+        data: {
+          userId,
+          jobId,
+          recruiterAnswers,
+          coverLetter,
+          appliedAt: new Date(),
+          status: 'applied'
+        }
+      });
+      console.log("✅ Application saved to tracker.");
+    } catch (err) {
+      console.error("❌ Failed to save application:", err);
+    }
+
+    res.json({ ...recruiterAnswers, coverLetter });
   } catch (err) {
     console.error('Recruiter answers generation error:', err);
     res.status(500).json({ error: 'Failed to generate recruiter answers' });
@@ -286,5 +376,65 @@ Give a match score out of 100 and a few reasons. Respond in this JSON format:
   } catch (err) {
     console.error('Error scoring resume against JD:', err);
     res.status(500).json({ error: 'Failed to score resume' });
+  }
+};
+exports.generateCoverLetter = async (req, res) => {
+  const { resumeText, jobDescription } = req.body;
+
+  if (resumeText) console.log('📎 Resume text from request body (first 500 chars):', resumeText.slice(0, 500));
+
+  let finalResumeText = resumeText;
+  if (!finalResumeText && req.user?.id) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { resumeText: true }
+      });
+      finalResumeText = user?.resumeText || '';
+      console.log('📄 Resume text from DB:', finalResumeText.slice(0, 500)); // show first 500 chars
+    } catch (fetchErr) {
+      console.error("Failed to fetch user resume from DB:", fetchErr);
+    }
+  }
+
+  if (!finalResumeText || !jobDescription) {
+    return res.status(400).json({ error: 'Missing resume text or job description' });
+  }
+
+  const messages = [
+    {
+      role: 'system',
+      content: 'You are a professional job assistant AI that writes strong, personalized cover letters.'
+    },
+    {
+      role: 'user',
+      content: `Here is the resume:\n${finalResumeText}\n\nAnd here is the job description:\n${jobDescription}\n\nWrite a tailored cover letter.`
+    }
+  ];
+
+  try {
+    const response = await axios.post(
+      'https://adihub3504002192.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview',
+      {
+        messages,
+        temperature: 0.7
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': process.env.AZURE_API_KEY
+        }
+      }
+    );
+
+    const message = response.data.choices[0]?.message?.content;
+    console.log('📄 Generated Cover Letter:', message);
+    if (!message) {
+      return res.status(500).json({ error: 'AI returned empty response' });
+    }
+    res.json({ coverLetter: message });
+  } catch (err) {
+    console.error('Cover letter generation error:', err);
+    res.status(500).json({ error: 'Failed to generate cover letter' });
   }
 };

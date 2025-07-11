@@ -429,6 +429,40 @@ const applyViaAutofill = async (req, res) => {
   }
 };
 
+// ✅ Save suggested job (used by AI job suggestions)
+const saveSuggestedJob = async (req, res) => {
+  const { id, title, company, location, description, userId, isAI } = req.body;
+
+  if (!id || !title || !company || !location || !description || !userId) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const existing = await prisma.suggestedJob.findUnique({ where: { id } });
+
+    if (existing) {
+      return res.status(200).json({ message: "Job already exists", job: existing });
+    }
+
+    const newJob = await prisma.suggestedJob.create({
+      data: {
+        id,
+        title,
+        company,
+        location,
+        description,
+        userId,
+        isAI: isAI ?? false
+      }
+    });
+
+    res.status(201).json({ message: "Suggested job saved", job: newJob });
+  } catch (error) {
+    console.error("❌ Error saving suggested job:", error);
+    res.status(500).json({ error: "Failed to save suggested job", detail: error.message });
+  }
+};
+
 module.exports = {
   getRemoteJobs,
   saveJob,
@@ -436,4 +470,5 @@ module.exports = {
   applyViaAutofill,
   getJobDetails,
   getCompanyInsights,
+  saveSuggestedJob,
 };
