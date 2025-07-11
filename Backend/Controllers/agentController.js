@@ -348,7 +348,17 @@ The letter should be concise, highlight the candidate's most relevant skills and
 
 exports.scoreResumeAgainstJD = async (req, res) => {
   const { jobDescription } = req.body;
-  const userId = req.user.id;
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
+
+  let userId;
+  try {
+    const decoded = require("jsonwebtoken").verify(token, process.env.JWT_SECRET);
+    userId = decoded.userId || decoded.id;
+  } catch (err) {
+    console.error("Token decode error:", err);
+    return res.status(403).json({ error: "Invalid token" });
+  }
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user || !user.resumeText) {
