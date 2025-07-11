@@ -45,58 +45,49 @@ export default function AutoFillApplication() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Prefill recruiter answers using AI after job and userProfile are loaded
-  async function fetchAIAnswers() {
-    console.log("🧠 Triggering fetchAIAnswers with:", job?.userId, jobId);
+  // Prefill recruiter answers and cover letter using AI after job and userProfile are loaded
+  async function fetchAIAnswersAndCoverLetter() {
+    console.log("🧠 Sending unified request to generate recruiter answers and cover letter...");
     if (!job?.userId || !jobId) {
-      console.warn("🚫 Cannot generate answers – missing jobId or userId");
+      console.warn("🚫 Missing jobId or userId");
       return;
     }
+
     try {
-      console.log("📤 Sending request to generate recruiter answers...");
       const res = await API.post("/generate/recruiter-answers", {
-        jobId: jobId,
+        jobId,
         userId: job.userId,
         questions: questions.map(q => q.question),
       });
+
       const answered = res.data.answers.map(ans => ({
         question: ans.question,
         answer: ans.answer
       }));
       setQuestions(answered);
-      console.log("✅ AI Answers updated");
+
+      if (res.data.coverLetter) {
+        setCoverLetter(res.data.coverLetter);
+        console.log("✅ Cover letter set from backend.");
+      } else {
+        console.warn("⚠️ Cover letter missing in backend response.");
+      }
     } catch (err) {
-      console.error("❌ Failed to fetch recruiter answers:", err);
+      console.error("❌ Failed to fetch recruiter answers and cover letter:", err);
     }
   }
 
   useEffect(() => {
     console.log("📌 jobId or job.userId changed:", { jobId, userId: job?.userId });
     if (job?.userId && jobId) {
-      console.log("✅ Triggering fetchAIAnswers from unified useEffect");
-      fetchAIAnswers();
+      console.log("✅ Triggering fetchAIAnswersAndCoverLetter from unified useEffect");
+      fetchAIAnswersAndCoverLetter();
     }
   }, [jobId, job?.userId]);
 
-  // Prefill cover letter using AI after job and userProfile are loaded
-  async function fetchCoverLetter() {
-    if (!job?.userId) return;
-    try {
-      const res = await API.post("/generate/cover-letter", {
-        jobId: jobId,
-        userId: job.userId,
-      });
-      setCoverLetter(res.data.coverLetter || "");
-    } catch (err) {
-      console.error("❌ Failed to generate cover letter:", err);
-    }
-  }
-
-  useEffect(() => {
-    if (job?.userId && jobId) {
-      fetchCoverLetter();
-    }
-  }, [jobId]);
+  const handleGenerateAll = () => {
+    fetchAIAnswersAndCoverLetter();
+  };
 
   const handleQuestionChange = (index, value) => {
     const updated = [...questions];
@@ -249,13 +240,10 @@ export default function AutoFillApplication() {
           </div>
         ))}
         <button
-          onClick={() => {
-            console.log("📤 Generate AI Answers button clicked");
-            fetchAIAnswers();
-          }}
-          className="bg-blue-100 text-blue-800 px-3 py-1 text-sm rounded hover:bg-blue-200 mb-4"
+          onClick={handleGenerateAll}
+          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 mb-4"
         >
-          🔁 Generate AI Answers
+          ✨ Generate All with AI
         </button>
 
         {/* Cover Letter */}
@@ -269,14 +257,6 @@ export default function AutoFillApplication() {
               rows={6}
             />
           </div>
-          {!coverLetter && (
-            <button
-              onClick={() => fetchCoverLetter()}
-              className="ml-2 bg-green-100 text-green-800 px-3 py-1 text-sm rounded hover:bg-green-200"
-            >
-              📝 Generate Cover Letter
-            </button>
-          )}
         </div>
 
         <div className="flex items-center gap-2">

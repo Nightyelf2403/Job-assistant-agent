@@ -287,7 +287,15 @@ Respond ONLY in this JSON format:
             },
             {
               role: 'user',
-              content: `Here is the resume:\n${user.resumeText || ''}\n\nAnd here is the job description:\n${jobDescription}\n\nWrite a tailored cover letter.`
+              content: `Please generate a professional, tailored cover letter for the following job using the candidate's resume.
+
+Resume:
+${user.resumeText || ''}
+
+Job Description:
+${jobDescription}
+
+The letter should be concise, highlight the candidate's most relevant skills and experiences, and reflect enthusiasm for the role and company. Format it in proper letter style with a greeting and closing.`
             }
           ],
           temperature: 0.7
@@ -300,6 +308,7 @@ Respond ONLY in this JSON format:
         }
       );
       coverLetter = coverRes.data.choices[0]?.message?.content || '';
+      console.log("📄 Generated Cover Letter:", coverLetter);
     } catch (err) {
       console.error("⚠️ Cover letter generation failed:", err);
     }
@@ -326,7 +335,10 @@ Respond ONLY in this JSON format:
       console.error("❌ Failed to save application:", err);
     }
 
-    res.json({ ...recruiterAnswers, coverLetter });
+    res.json({
+      answers: recruiterAnswers.answers,
+      coverLetter: coverLetter || 'Cover letter not generated'
+    });
   } catch (err) {
     console.error('Recruiter answers generation error:', err);
     res.status(500).json({ error: 'Failed to generate recruiter answers' });
@@ -390,66 +402,6 @@ Give a match score out of 100 and a few reasons. Respond in this JSON format:
     res.status(500).json({ error: 'Failed to score resume' });
   }
 };
-exports.generateCoverLetter = async (req, res) => {
-  const { resumeText, jobDescription } = req.body;
-
-  if (resumeText) console.log('📎 Resume text from request body (first 500 chars):', resumeText.slice(0, 500));
-
-  let finalResumeText = resumeText;
-  if (!finalResumeText && req.user?.id) {
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id: req.user.id },
-        select: { resumeText: true }
-      });
-      finalResumeText = user?.resumeText || '';
-      console.log('📄 Resume text from DB:', finalResumeText.slice(0, 500)); // show first 500 chars
-    } catch (fetchErr) {
-      console.error("Failed to fetch user resume from DB:", fetchErr);
-    }
-  }
-
-  if (!finalResumeText || !jobDescription) {
-    return res.status(400).json({ error: 'Missing resume text or job description' });
-  }
-
-  const messages = [
-    {
-      role: 'system',
-      content: 'You are a professional job assistant AI that writes strong, personalized cover letters.'
-    },
-    {
-      role: 'user',
-      content: `Here is the resume:\n${finalResumeText}\n\nAnd here is the job description:\n${jobDescription}\n\nWrite a tailored cover letter.`
-    }
-  ];
-
-  try {
-    const response = await axios.post(
-      'https://adihub3504002192.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview',
-      {
-        messages,
-        temperature: 0.7
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'api-key': process.env.AZURE_API_KEY
-        }
-      }
-    );
-
-    const message = response.data.choices[0]?.message?.content;
-    console.log('📄 Generated Cover Letter:', message);
-    if (!message) {
-      return res.status(500).json({ error: 'AI returned empty response' });
-    }
-    res.json({ coverLetter: message });
-  } catch (err) {
-    console.error('Cover letter generation error:', err);
-    res.status(500).json({ error: 'Failed to generate cover letter' });
-  }
-};
 
 // Ensure all controller functions are exported for route setup
 module.exports = {
@@ -457,6 +409,5 @@ module.exports = {
   analyzeResume: exports.analyzeResume,
   submitFeedback: exports.submitFeedback,
   generateRecruiterAnswers: exports.generateRecruiterAnswers,
-  scoreResumeAgainstJD: exports.scoreResumeAgainstJD,
-  generateCoverLetter: exports.generateCoverLetter
+  scoreResumeAgainstJD: exports.scoreResumeAgainstJD
 };

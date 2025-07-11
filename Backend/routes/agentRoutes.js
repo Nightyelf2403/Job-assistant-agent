@@ -7,7 +7,7 @@ const {
   submitFeedback,
   generateRecruiterAnswers,
   scoreResumeAgainstJD,
-  generateCoverLetter,
+  
   
 } = require('../controllers/agentController');
 
@@ -19,7 +19,7 @@ router.post('/resume/analyze', upload.single('resume'), analyzeResume);
 router.post('/feedback', submitFeedback); // Optional feedback
 router.post('/generate/recruiter-answers', generateRecruiterAnswers);
 router.post('/score', scoreResumeAgainstJD);
-router.post('/generate/cover-letter', authenticateToken, generateCoverLetter);
+
 
 
 
