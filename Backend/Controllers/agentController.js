@@ -346,10 +346,14 @@ The letter should be concise, highlight the candidate's most relevant skills and
 };
 
 exports.scoreResumeAgainstJD = async (req, res) => {
-  const { resumeText, jobDescription } = req.body;
-  if (!resumeText || !jobDescription) {
-    return res.status(400).json({ error: 'Missing resume text or job description' });
+  const { jobDescription } = req.body;
+  const userId = req.user.id;
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || !user.resumeText) {
+    return res.status(404).json({ error: 'Resume not found. Please upload it first.' });
   }
+  const resumeText = user.resumeText;
 
   const messages = [
     {

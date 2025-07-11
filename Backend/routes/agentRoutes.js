@@ -18,7 +18,10 @@ router.post('/generate/answer', generateAnswer);
 router.post('/resume/analyze', upload.single('resume'), analyzeResume);
 router.post('/feedback', submitFeedback); // Optional feedback
 router.post('/generate/recruiter-answers', generateRecruiterAnswers);
-router.post('/score', scoreResumeAgainstJD);
+router.post('/generate/score', authenticateToken, scoreResumeAgainstJD);
+
+console.log('✅ /api/generate/score route loaded');
+
 
 
 
