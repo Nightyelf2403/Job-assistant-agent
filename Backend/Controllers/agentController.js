@@ -35,7 +35,7 @@ Respond ONLY in this JSON format:
 
   try {
     const response = await axios.post(
-      'https://adihub3504002192.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview',
+      'https://adihub3504002192.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview',
       {
         messages,
         temperature: 0.7
@@ -106,7 +106,7 @@ ${jobDescription}`
     ];
 
     const response = await axios.post(
-      'https://adihub3504002192.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview',
+      'https://adihub3504002192.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview',
       {
         messages,
         temperature: 0.7
@@ -244,7 +244,7 @@ Respond ONLY in this JSON format:
 
   try {
     const response = await axios.post(
-      'https://adihub3504002192.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview',
+      'https://adihub3504002192.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview',
       {
         messages,
         temperature: 0.7
@@ -271,7 +271,7 @@ Respond ONLY in this JSON format:
     let coverLetter = '';
     try {
       const coverRes = await axios.post(
-        'https://adihub3504002192.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview',
+        'https://adihub3504002192.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview',
         {
           messages: [
             {
@@ -303,9 +303,12 @@ Respond ONLY in this JSON format:
         data: {
           userId,
           jobId,
-          recruiterAnswers,
+          jobTitle: job.title || 'Untitled',
+          company: job.company || 'Unknown',
+          location: job.location || 'Not specified',
+          recruiterAnswers: recruiterAnswers.answers,
           coverLetter,
-          appliedAt: new Date(),
+          dateApplied: new Date(),
           status: 'applied'
         }
       });
@@ -351,7 +354,7 @@ Give a match score out of 100 and a few reasons. Respond in this JSON format:
 
   try {
     const response = await axios.post(
-      'https://adihub3504002192.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview',
+      'https://adihub3504002192.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview',
       {
         messages,
         temperature: 0.7
@@ -414,7 +417,7 @@ exports.generateCoverLetter = async (req, res) => {
 
   try {
     const response = await axios.post(
-      'https://adihub3504002192.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview',
+      'https://adihub3504002192.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview',
       {
         messages,
         temperature: 0.7

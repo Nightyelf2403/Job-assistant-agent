@@ -400,7 +400,7 @@ const getJobDetails = async (req, res) => {
   }
 };
 
-// ✅ Apply via Autofill (stores application in DB)
+// ✅ Apply via Autofill (stores application in DB and ensures SuggestedJob is saved)
 const applyViaAutofill = async (req, res) => {
   const { userId, job } = req.body;
   if (!userId || !job?.job_id || !job?.employer_name || !job?.job_title) {
@@ -408,6 +408,29 @@ const applyViaAutofill = async (req, res) => {
   }
 
   try {
+    // Save to SuggestedJob if not already saved
+    const existingSuggested = await prisma.suggestedJob.findFirst({
+      where: {
+        id: job.job_id,
+        userId
+      }
+    });
+
+    if (!existingSuggested) {
+      await prisma.suggestedJob.create({
+        data: {
+          id: job.job_id,
+          title: job.job_title,
+          company: job.employer_name,
+          location: job.job_location || job.job_country || "Unknown",
+          description: job.job_description || "",
+          userId,
+          isAI: true
+        }
+      });
+    }
+
+    // Save to Application table
     const applied = await prisma.application.create({
       data: {
         userId,
@@ -438,7 +461,12 @@ const saveSuggestedJob = async (req, res) => {
   }
 
   try {
-    const existing = await prisma.suggestedJob.findUnique({ where: { id } });
+    const existing = await prisma.suggestedJob.findFirst({
+      where: {
+        id,
+        userId
+      }
+    });
 
     if (existing) {
       return res.status(200).json({ message: "Job already exists", job: existing });

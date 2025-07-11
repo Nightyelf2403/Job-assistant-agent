@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import API from "../api";
 
 export default function AutoFillApplication() {
   const { jobId } = useParams();
+  const navigate = useNavigate();
   const [job, setJob] = useState(null);
   const [questions, setQuestions] = useState([
     { question: "Why do you want to work here?", answer: "" },
@@ -39,44 +40,44 @@ export default function AutoFillApplication() {
   }, [job]);
 
   // Prefill recruiter answers using AI after job and userProfile are loaded
-  useEffect(() => {
-    async function fetchAIAnswers() {
-      if (!job?.description || !userProfile) return;
-      try {
-        const res = await API.post("/generate/recruiter-answers", {
-          jobDescription: job.description,
-          userProfile,
-          questions: questions.map(q => q.question)
-        });
-        const answered = res.data.answers.map(ans => ({
-          question: ans.question,
-          answer: ans.answer
-        }));
-        setQuestions(answered);
-      } catch (err) {
-        console.error("❌ Failed to fetch recruiter answers:", err);
-      }
+  async function fetchAIAnswers() {
+    if (!job?.userId) return;
+    try {
+      const res = await API.post("/generate/recruiter-answers", {
+        jobId: jobId,
+        userId: job.userId,
+        questions: questions.map(q => q.question),
+      });
+      const answered = res.data.answers.map(ans => ({
+        question: ans.question,
+        answer: ans.answer
+      }));
+      setQuestions(answered);
+    } catch (err) {
+      console.error("❌ Failed to fetch recruiter answers:", err);
     }
+  }
 
+  useEffect(() => {
     fetchAIAnswers();
     // eslint-disable-next-line
   }, [job, userProfile]);
 
   // Prefill cover letter using AI after job and userProfile are loaded
-  useEffect(() => {
-    async function fetchCoverLetter() {
-      if (!job?.description || !userProfile) return;
-      try {
-        const res = await API.post("/generate/cover-letter", {
-          jobDescription: job.description,
-          resumeText: JSON.stringify(userProfile)
-        });
-        setCoverLetter(res.data.coverLetter || "");
-      } catch (err) {
-        console.error("❌ Failed to generate cover letter:", err);
-      }
+  async function fetchCoverLetter() {
+    if (!job?.userId) return;
+    try {
+      const res = await API.post("/generate/cover-letter", {
+        jobId: jobId,
+        userId: job.userId,
+      });
+      setCoverLetter(res.data.coverLetter || "");
+    } catch (err) {
+      console.error("❌ Failed to generate cover letter:", err);
     }
+  }
 
+  useEffect(() => {
     fetchCoverLetter();
     // eslint-disable-next-line
   }, [job, userProfile]);
@@ -111,9 +112,34 @@ export default function AutoFillApplication() {
     }
   };
 
-  const handleSubmit = () => {
-    // Will wire up backend logic later
-    console.log("Submitting:", { jobId, questions, coverLetter });
+  const handleSubmit = async () => {
+    try {
+      // Save job in SuggestedJob table before applying
+      await API.post("/suggested-jobs", {
+        id: jobId,
+        title: job.job_title,
+        company: job.company_name,
+        location: job.locations?.join(", ") || "",
+        description: job.description,
+        userId: job.userId,
+        isAI: true
+      });
+      const res = await API.post("/applications/apply", {
+        jobId,
+        userId: job.userId,
+        title: job.job_title,
+        company: job.company_name,
+        location: job.locations?.join(", ") || "",
+        description: job.description,
+        answers: questions,
+        coverLetter
+      });
+      alert("✅ Application submitted!");
+      // Don't navigate to dashboard here — it's already added in SuggestedJob click
+    } catch (err) {
+      console.error("❌ Failed to save application:", err);
+      alert("❌ Failed to submit application");
+    }
   };
 
   if (!job) return <div className="p-4">Loading job description...</div>;
@@ -193,16 +219,34 @@ export default function AutoFillApplication() {
             />
           </div>
         ))}
+        {questions.every(q => !q.answer) && (
+          <button
+            onClick={() => fetchAIAnswers()}
+            className="bg-blue-100 text-blue-800 px-3 py-1 text-sm rounded hover:bg-blue-200 mb-4"
+          >
+            🔁 Generate AI Answers
+          </button>
+        )}
 
         {/* Cover Letter */}
-        <div>
-          <label className="block font-medium text-sm mb-1">Cover Letter</label>
-          <textarea
-            value={coverLetter}
-            onChange={(e) => setCoverLetter(e.target.value)}
-            className="w-full border rounded p-2 text-sm"
-            rows={6}
-          />
+        <div className="flex items-start">
+          <div className="flex-1">
+            <label className="block font-medium text-sm mb-1">Cover Letter</label>
+            <textarea
+              value={coverLetter}
+              onChange={(e) => setCoverLetter(e.target.value)}
+              className="w-full border rounded p-2 text-sm"
+              rows={6}
+            />
+          </div>
+          {!coverLetter && (
+            <button
+              onClick={() => fetchCoverLetter()}
+              className="ml-2 bg-green-100 text-green-800 px-3 py-1 text-sm rounded hover:bg-green-200"
+            >
+              📝 Generate Cover Letter
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-2">

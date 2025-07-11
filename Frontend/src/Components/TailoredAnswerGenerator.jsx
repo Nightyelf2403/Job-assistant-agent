@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useParams } from 'react-router-dom';
 
 export default function TailoredAnswerGenerator() {
+  const { jobId } = useParams();
   const [jobDescription, setJobDescription] = useState('');
   const [userProfile, setUserProfile] = useState({});
   const [answer, setAnswer] = useState('');
@@ -10,6 +12,7 @@ export default function TailoredAnswerGenerator() {
   const [customQuestion, setCustomQuestion] = useState('');
   const [customAnswer, setCustomAnswer] = useState('');
   const [coverLetter, setCoverLetter] = useState('');
+  const [recruiterAnswers, setRecruiterAnswers] = useState([]);
 
   // Auto-fetch resumeText and profile on mount
   useEffect(() => {
@@ -32,6 +35,28 @@ export default function TailoredAnswerGenerator() {
 
     fetchInitialData();
   }, []);
+
+  const fetchRecruiterAnswers = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post("http://localhost:5050/api/generate/recruiter-answers", {
+        jobId: jobId, // replaced with dynamic jobId from URL
+        userId: userProfile?.id || "", // assuming userProfile has 'id'
+        questions: [
+          "Why do you want to work here?",
+          "What are your strengths?",
+          "How does your background align with this role?"
+        ]
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setRecruiterAnswers(res.data.answers || []);
+    } catch (err) {
+      console.error("Failed to fetch recruiter answers:", err);
+    }
+  };
 
   const handleGenerate = async () => {
     try {
@@ -115,6 +140,12 @@ export default function TailoredAnswerGenerator() {
       >
         Force Extract Resume
       </button>
+      <button
+        onClick={fetchRecruiterAnswers}
+        className="ml-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded transition-all"
+      >
+        Generate Recruiter Answers
+      </button>
 
       {answer && (
         <div className="mt-6 p-6 border border-gray-300 rounded-md bg-gray-50 shadow-sm">
@@ -159,6 +190,17 @@ export default function TailoredAnswerGenerator() {
           </div>
         )}
       </div>
+      {recruiterAnswers.length > 0 && (
+        <div className="mt-10 p-6 border border-gray-300 rounded-md bg-white shadow-sm">
+          <h3 className="text-xl font-semibold text-gray-700 mb-4">💬 Recruiter Question Answers</h3>
+          {recruiterAnswers.map((qa, index) => (
+            <div key={index} className="mb-4">
+              <p className="font-medium text-gray-800">Q: {qa.question}</p>
+              <p className="text-gray-700 mt-1">A: {qa.answer}</p>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="mt-10 p-6 border border-gray-300 rounded-md bg-white shadow-sm">
         <h3 className="text-xl font-semibold text-gray-700 mb-2">📬 AI-Generated Cover Letter</h3>
         <button

@@ -65,6 +65,27 @@ export default function Dashboard() {
     fetchUser();
   }, []);
 
+  // Effect to listen for storage changes to re-fetch user data when jobs are applied elsewhere
+  useEffect(() => {
+    const handleStorageChange = () => {
+      if (localStorage.getItem("refreshApplications") === "true") {
+        // Re-fetch user data
+        async function fetchUser() {
+          try {
+            const res = await API.get(`/users/${userId}`);
+            setUser(res.data);
+          } catch (err) {
+            console.error("❌ Failed to fetch user:", err);
+          }
+        }
+        fetchUser();
+        localStorage.removeItem("refreshApplications");
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
   async function fetchJobs(forceRefresh = false) {
     setLoadingJobs(true);
     try {
@@ -207,6 +228,17 @@ return (
                 </tr>
               </thead>
               <tbody>
+                {user?.applications?.map((app, idx) => (
+                  <tr key={idx} className="bg-white border-b">
+                    <td className="px-4 py-2">{app.title}</td>
+                    <td className="px-4 py-2">{app.company}</td>
+                    <td className="px-4 py-2">{new Date(app.createdAt).toLocaleDateString()}</td>
+                    <td className="px-4 py-2 text-green-600">
+                      ✅ Applied
+                      <progress value="100" max="100" className="w-full h-2 rounded bg-gray-200 text-green-600 mt-1" />
+                    </td>
+                  </tr>
+                ))}
                 <tr className="bg-white border-b">
                   <td className="px-4 py-2">Software Intern</td>
                   <td className="px-4 py-2">Google</td>
@@ -308,6 +340,36 @@ return (
                           </a>
                         </div>
                       )}
+                      <button
+                        className="mt-2 text-sm text-indigo-600 hover:underline"
+                        onClick={async (e) => {
+                          e.stopPropagation(); // prevent triggering setSelectedJob
+
+                          try {
+                            const userId = localStorage.getItem("userId");
+
+                            await API.post("/suggested-jobs", {
+                              id: job.id || job.job_id || job.JobID,
+                              title: job.job_title || job.title,
+                              company: job.employer_name || job.company_name || job.Company,
+                              location: job.job_location || job.job_city || job.Location,
+                              description: job.job_description || job.description,
+                              userId,
+                              isAI: true,
+                            });
+
+                            // Set flag to refresh applications on other tabs
+                            localStorage.setItem("refreshApplications", "true");
+                            localStorage.setItem("jobToApply", JSON.stringify(job));
+                            navigate(`/autofill/${job.job_id || job.JobID || job.id}`);
+                          } catch (err) {
+                            console.error("❌ Failed to save job before autofill navigation:", err);
+                            alert("Failed to save job. Please try again.");
+                          }
+                        }}
+                      >
+                        Auto Apply
+                      </button>
                     </li>
                   );
                 })}
@@ -403,10 +465,29 @@ return (
               Apply Externally
             </a>
             <button
-              onClick={() => {
-                // navigate to autofill page with job details
-                localStorage.setItem("jobToApply", JSON.stringify(selectedJob));
-                navigate(`/autofill/${selectedJob.job_id || selectedJob.JobID || selectedJob.id}`);
+              onClick={async () => {
+                try {
+                  const userId = localStorage.getItem("userId");
+
+                  await API.post("/suggested-jobs", {
+                    id: selectedJob.id || selectedJob.job_id || selectedJob.JobID,
+                    title: selectedJob.job_title || selectedJob.title,
+                    company: selectedJob.employer_name || selectedJob.company_name || selectedJob.Company,
+                    location: selectedJob.job_location || selectedJob.job_city || selectedJob.Location,
+                    description: selectedJob.job_description || selectedJob.description,
+                    userId,
+                    isAI: true
+                  });
+
+                  // Set flag to refresh applications on other tabs
+                  localStorage.setItem("refreshApplications", "true");
+                  // Save job to localStorage and navigate
+                  localStorage.setItem("jobToApply", JSON.stringify(selectedJob));
+                  navigate(`/autofill/${selectedJob.job_id || selectedJob.JobID || selectedJob.id}`);
+                } catch (err) {
+                  console.error("❌ Failed to save job before autofill navigation:", err);
+                  alert("Failed to save job. Please try again.");
+                }
               }}
               className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
             >

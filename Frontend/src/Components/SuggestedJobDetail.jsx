@@ -18,6 +18,8 @@ export default function SuggestedJobDetail() {
       const res = await API.post("/ai/answer-recruiter-questions", {
         userId,
         jobId: id,
+        resumeText: job?.resumeText || "",
+        jobDescription: job?.description || "",
       });
       setRecruiterAnswers(res.data.answers);
     } catch (err) {
@@ -122,6 +124,14 @@ export default function SuggestedJobDetail() {
                     .replace(/Benefits:?/gi, "<h4 class='font-bold mt-4'>Benefits</h4>")
                 }}
               />
+              {!job.coverLetterGenerated && (
+                <button
+                  onClick={fetchRecruiterQuestions}
+                  className="mt-4 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+                >
+                  Generate Cover Letter
+                </button>
+              )}
             </div>
 
             <div className="job-meta mt-6 text-sm text-gray-500">
@@ -163,6 +173,14 @@ export default function SuggestedJobDetail() {
                     </button>
                   </form>
                 )}
+                {recruiterAnswers.length > 0 ? null : (
+                  <button
+                    onClick={fetchRecruiterQuestions}
+                    className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  >
+                    Generate Recruiter Answers
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -171,3 +189,9 @@ export default function SuggestedJobDetail() {
     </div>
   );
 }
+
+  useEffect(() => {
+    if (job && recruiterAnswers.length === 0) {
+      fetchRecruiterQuestions();
+    }
+  }, [job]);
