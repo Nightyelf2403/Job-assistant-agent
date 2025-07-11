@@ -65,6 +65,38 @@ export default function Dashboard() {
     fetchUser();
   }, []);
 
+  // Fetch recruiter answers when a job is selected
+  useEffect(() => {
+    async function fetchRecruiterAnswers() {
+      if (!selectedJob) return;
+      const jobId = selectedJob.id || selectedJob.job_id || selectedJob.JobID;
+      const userId = localStorage.getItem("userId");
+      console.log("🔄 Fetching recruiter answers for job:", jobId);
+
+      try {
+        const res = await API.post("/generate/recruiter-answers", {
+          jobId,
+          userId,
+          questions: [
+            "Why do you want to work here?",
+            "What attracts you to this role?",
+            "How does this align with your future goals?"
+          ]
+        });
+
+        if (res.data.answers) {
+          setEditedAnswers(res.data.answers.map(a => a.answer));
+        } else {
+          console.warn("⚠️ No answers returned from backend");
+        }
+      } catch (err) {
+        console.error("❌ Failed to fetch recruiter answers:", err);
+      }
+    }
+
+    fetchRecruiterAnswers();
+  }, [selectedJob]);
+
   // Effect to listen for storage changes to re-fetch user data when jobs are applied elsewhere
   useEffect(() => {
     const handleStorageChange = () => {

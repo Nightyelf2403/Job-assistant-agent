@@ -14,6 +14,7 @@ export default function AutoFillApplication() {
   const [userProfile, setUserProfile] = useState(null);
   const [customQuestion, setCustomQuestion] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
+  const [showTip, setShowTip] = useState(true);
 
   useEffect(() => {
     async function fetchJobDetails() {
@@ -39,10 +40,20 @@ export default function AutoFillApplication() {
     if (job?.userId) fetchUserProfile();
   }, [job]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setShowTip(false), 60000); // 1 minute
+    return () => clearTimeout(timer);
+  }, []);
+
   // Prefill recruiter answers using AI after job and userProfile are loaded
   async function fetchAIAnswers() {
-    if (!job?.userId) return;
+    console.log("🧠 Triggering fetchAIAnswers with:", job?.userId, jobId);
+    if (!job?.userId || !jobId) {
+      console.warn("🚫 Cannot generate answers – missing jobId or userId");
+      return;
+    }
     try {
+      console.log("📤 Sending request to generate recruiter answers...");
       const res = await API.post("/generate/recruiter-answers", {
         jobId: jobId,
         userId: job.userId,
@@ -53,15 +64,19 @@ export default function AutoFillApplication() {
         answer: ans.answer
       }));
       setQuestions(answered);
+      console.log("✅ AI Answers updated");
     } catch (err) {
       console.error("❌ Failed to fetch recruiter answers:", err);
     }
   }
 
   useEffect(() => {
-    fetchAIAnswers();
-    // eslint-disable-next-line
-  }, [job, userProfile]);
+    console.log("📌 jobId or job.userId changed:", { jobId, userId: job?.userId });
+    if (job?.userId && jobId) {
+      console.log("✅ Triggering fetchAIAnswers from unified useEffect");
+      fetchAIAnswers();
+    }
+  }, [jobId, job?.userId]);
 
   // Prefill cover letter using AI after job and userProfile are loaded
   async function fetchCoverLetter() {
@@ -78,9 +93,10 @@ export default function AutoFillApplication() {
   }
 
   useEffect(() => {
-    fetchCoverLetter();
-    // eslint-disable-next-line
-  }, [job, userProfile]);
+    if (job?.userId && jobId) {
+      fetchCoverLetter();
+    }
+  }, [jobId]);
 
   const handleQuestionChange = (index, value) => {
     const updated = [...questions];
@@ -204,6 +220,19 @@ export default function AutoFillApplication() {
       {/* Right: Application Form */}
       <div className="bg-white p-4 rounded shadow space-y-4">
         <h3 className="text-lg font-semibold">Recruiter Questions</h3>
+        {showTip && (
+          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 text-sm rounded mb-3 shadow-sm relative">
+            <button
+              onClick={() => setShowTip(false)}
+              className="absolute top-1 right-2 text-yellow-700 hover:text-red-500 text-sm font-bold"
+              title="Dismiss"
+            >
+              ✕
+            </button>
+            ⏳ Please wait a few moments while we auto-generate answers. 
+            If they don't appear within a minute, click "Generate AI Answers" manually.
+          </div>
+        )}
         <p className="text-sm text-gray-500 mb-3">
           These common questions help tailor your application using AI. Fill them out to improve your application's effectiveness. You can modify or enhance the suggested answers.
         </p>
@@ -219,14 +248,15 @@ export default function AutoFillApplication() {
             />
           </div>
         ))}
-        {questions.every(q => !q.answer) && (
-          <button
-            onClick={() => fetchAIAnswers()}
-            className="bg-blue-100 text-blue-800 px-3 py-1 text-sm rounded hover:bg-blue-200 mb-4"
-          >
-            🔁 Generate AI Answers
-          </button>
-        )}
+        <button
+          onClick={() => {
+            console.log("📤 Generate AI Answers button clicked");
+            fetchAIAnswers();
+          }}
+          className="bg-blue-100 text-blue-800 px-3 py-1 text-sm rounded hover:bg-blue-200 mb-4"
+        >
+          🔁 Generate AI Answers
+        </button>
 
         {/* Cover Letter */}
         <div className="flex items-start">
