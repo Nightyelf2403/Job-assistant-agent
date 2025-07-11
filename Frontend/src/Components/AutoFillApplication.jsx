@@ -38,6 +38,49 @@ export default function AutoFillApplication() {
     if (job?.userId) fetchUserProfile();
   }, [job]);
 
+  // Prefill recruiter answers using AI after job and userProfile are loaded
+  useEffect(() => {
+    async function fetchAIAnswers() {
+      if (!job?.description || !userProfile) return;
+      try {
+        const res = await API.post("/generate/recruiter-answers", {
+          jobDescription: job.description,
+          userProfile,
+          questions: questions.map(q => q.question)
+        });
+        const answered = res.data.answers.map(ans => ({
+          question: ans.question,
+          answer: ans.answer
+        }));
+        setQuestions(answered);
+      } catch (err) {
+        console.error("❌ Failed to fetch recruiter answers:", err);
+      }
+    }
+
+    fetchAIAnswers();
+    // eslint-disable-next-line
+  }, [job, userProfile]);
+
+  // Prefill cover letter using AI after job and userProfile are loaded
+  useEffect(() => {
+    async function fetchCoverLetter() {
+      if (!job?.description || !userProfile) return;
+      try {
+        const res = await API.post("/generate/cover-letter", {
+          jobDescription: job.description,
+          resumeText: JSON.stringify(userProfile)
+        });
+        setCoverLetter(res.data.coverLetter || "");
+      } catch (err) {
+        console.error("❌ Failed to generate cover letter:", err);
+      }
+    }
+
+    fetchCoverLetter();
+    // eslint-disable-next-line
+  }, [job, userProfile]);
+
   const handleQuestionChange = (index, value) => {
     const updated = [...questions];
     updated[index].answer = value;
@@ -45,30 +88,26 @@ export default function AutoFillApplication() {
   };
 
   const handleAskAI = async () => {
-    console.log("📤 Sending to backend:", {
+    console.log("📤 Sending to backend (custom question):", {
       jobDescription: job?.description,
       userProfile,
-      questions: questions.map(q => q.question),
+      question: customQuestion,
     });
 
-    if (!job?.description || !userProfile) {
-      console.warn("🚫 Missing job description or user profile");
+    if (!job?.description || !userProfile || !customQuestion) {
+      console.warn("🚫 Missing job description, user profile or custom question");
       return;
     }
 
     try {
-      const res = await API.post("/generate/recruiter-answers", {
+      const res = await API.post("/generate/ask", {
         jobDescription: job.description,
-        userProfile,
-        questions: questions.map(q => q.question)
+        resumeText: JSON.stringify(userProfile),
+        question: customQuestion,
       });
-      const answered = res.data.answers.map(ans => ({
-        question: ans.question,
-        answer: ans.answer
-      }));
-      setQuestions(answered);
+      alert("🧠 AI says: " + res.data.answer);
     } catch (err) {
-      console.error("❌ Failed to fetch recruiter answers:", err);
+      console.error("❌ Failed to get AI response:", err);
     }
   };
 
