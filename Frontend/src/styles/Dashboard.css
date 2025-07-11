@@ -135,17 +135,59 @@
   font-size: 0.95rem;
 }
 
-/* Applications placeholder */
+/* Applications Tracker Section */
 .application-section {
-  background: #fff;
+  background: #ffffff;
   padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   margin-bottom: 2rem;
+  font-size: 0.95rem;
 }
 
 .application-section h3 {
-  margin-bottom: 0.8rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #111827;
+}
+
+.application-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.application-table th,
+.application-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.application-table th {
+  background-color: #f3f4f6;
+  color: #374151;
+  font-weight: 600;
+}
+
+.application-table td.status-in-progress {
+  color: #d97706;
+  font-weight: 500;
+}
+
+.application-table td.status-applied {
+  color: #10b981;
+  font-weight: 500;
+}
+
+.application-table td.status-rejected {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.application-table tr:hover {
+  background-color: #f9fafb;
+  cursor: pointer;
 }
 
 /* Full Page Job Detail View */

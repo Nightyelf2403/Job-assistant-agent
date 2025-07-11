@@ -1,6 +1,7 @@
 const express = require('express');
 const upload = require('../middleware/upload');
 const { authenticateToken } = require('../middleware/authMiddleware');
+
 const {
   generateAnswer,
   analyzeResume,
@@ -8,6 +9,7 @@ const {
   generateRecruiterAnswers,
   scoreResumeAgainstJD,
   askAIQuestion,
+  startAutofillApplication,
 } = require('../controllers/agentController');
 
 const router = express.Router();
@@ -19,6 +21,7 @@ router.post('/feedback', submitFeedback); // Optional feedback
 router.post('/generate/recruiter-answers', generateRecruiterAnswers);
 router.post('/generate/score', authenticateToken, scoreResumeAgainstJD);
 router.post('/generate/ask', authenticateToken, askAIQuestion);
+router.post('/autofill-start', startAutofillApplication);
 console.log('✅ /api/generate/score route loaded');
 console.log('✅ /api/generate/ask route loaded');
 

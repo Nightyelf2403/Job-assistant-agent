@@ -21,8 +21,19 @@ export default function AutoFillApplication() {
       try {
         const res = await API.get(`/jobs/details/${jobId}`);
         setJob(res.data);
+
+        // Trigger application tracking
+        await API.post("/applications/autofill-start", {
+          userId: res.data.userId,
+          jobId: jobId,
+          jobTitle: res.data.job_title,
+          company: res.data.company_name,
+          location: res.data.locations?.join(", ") || "",
+          description: res.data.description,
+          applyLink: res.data.applyLink || ""
+        });
       } catch (err) {
-        console.error("❌ Failed to load job details:", err);
+        console.error("❌ Failed to load job details or start application:", err);
       }
     }
     fetchJobDetails();

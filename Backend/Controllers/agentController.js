@@ -499,6 +499,43 @@ Give a clear and helpful answer as if guiding the candidate. Respond in this JSO
     res.status(500).json({ error: 'Failed to answer question' });
   }
 };
+exports.startAutofillApplication = async (req, res) => {
+  const { userId, jobId, jobTitle, company, location, description, applyLink } = req.body;
+
+  if (!userId || !jobId || !jobTitle || !company || !location || !description) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    // Check if application already exists
+    const existing = await prisma.application.findFirst({
+      where: { userId, jobId }
+    });
+
+    if (existing) {
+      return res.status(200).json({ message: 'Application already exists', application: existing });
+    }
+
+    const application = await prisma.application.create({
+      data: {
+        userId,
+        jobId,
+        jobTitle,
+        company,
+        location,
+        description,
+        applyLink,
+        status: 'in-progress',
+        appliedAt: new Date()
+      }
+    });
+
+    res.status(201).json({ message: 'Application started', application });
+  } catch (error) {
+    console.error('Error starting autofill application:', error);
+    res.status(500).json({ error: 'Failed to start application' });
+  }
+};
 
 // Ensure all controller functions are exported for route setup
 module.exports = {
@@ -508,4 +545,5 @@ module.exports = {
   generateRecruiterAnswers: exports.generateRecruiterAnswers,
   scoreResumeAgainstJD: exports.scoreResumeAgainstJD,
   askAIQuestion: exports.askAIQuestion,
+  startAutofillApplication: exports.startAutofillApplication,
 };

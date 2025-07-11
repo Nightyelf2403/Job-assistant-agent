@@ -53,17 +53,21 @@ export default function Dashboard() {
   const [editedAnswers, setEditedAnswers] = useState(recruiterQuestions.map(q => q.answer));
 
 
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const res = await API.get(`/users/${userId}`);
-        setUser(res.data);
-      } catch (err) {
-        console.error("❌ Failed to fetch user:", err);
-      }
+useEffect(() => {
+  const shouldRefresh = localStorage.getItem("refreshApplications") === "true";
+  async function fetchUser() {
+    try {
+      const res = await API.get(`/users/${userId}`);
+      setUser(res.data);
+      localStorage.removeItem("refreshApplications");
+    } catch (err) {
+      console.error("❌ Failed to fetch user:", err);
     }
+  }
+  if (shouldRefresh) {
     fetchUser();
-  }, []);
+  }
+}, []);
 
   // Fetch recruiter answers when a job is selected
   useEffect(() => {
@@ -271,33 +275,6 @@ return (
                     </td>
                   </tr>
                 ))}
-                <tr className="bg-white border-b">
-                  <td className="px-4 py-2">Software Intern</td>
-                  <td className="px-4 py-2">Google</td>
-                  <td className="px-4 py-2">2025-07-01</td>
-                  <td className="px-4 py-2 text-green-600">
-                    ✅ Applied
-                    <progress value="100" max="100" className="w-full h-2 rounded bg-gray-200 text-green-600 mt-1" />
-                  </td>
-                </tr>
-                <tr className="bg-white border-b">
-                  <td className="px-4 py-2">ML Intern</td>
-                  <td className="px-4 py-2">Meta</td>
-                  <td className="px-4 py-2">2025-07-02</td>
-                  <td className="px-4 py-2 text-yellow-600">
-                    ⏳ Awaiting
-                    <progress value="50" max="100" className="w-full h-2 rounded bg-gray-200 text-yellow-600 mt-1" />
-                  </td>
-                </tr>
-                <tr className="bg-white">
-                  <td className="px-4 py-2">Frontend Developer</td>
-                  <td className="px-4 py-2">Amazon</td>
-                  <td className="px-4 py-2">2025-07-03</td>
-                  <td className="px-4 py-2 text-red-600">
-                    ❌ Rejected
-                    <progress value="0" max="100" className="w-full h-2 rounded bg-gray-200 text-red-600 mt-1" />
-                  </td>
-                </tr>
               </tbody>
             </table>
           </div>
