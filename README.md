@@ -53,7 +53,7 @@ An AI-powered job application assistant that helps users apply smarter and faste
 ## 🖼️ Screenshots
 
 > 🧑‍💼 **Dashboard View**  
-![Dashboard](./Images/Dashboard.png)
+![Dashboard](./Images/DashBoard.png)
 
 > 📝 **Tailored JD Matching Page**  
 ![JD Page](./Images/JDPage.png)
