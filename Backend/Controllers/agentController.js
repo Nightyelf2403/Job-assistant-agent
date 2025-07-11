@@ -1,6 +1,7 @@
 const axios = require('axios');
 const pdfParse = require('pdf-parse');
 const { PrismaClient } = require('@prisma/client');
+const jwt = require("jsonwebtoken");
 
 const prisma = new PrismaClient();
 
@@ -407,11 +408,92 @@ Give a match score out of 100 and a few reasons. Respond in this JSON format:
   }
 };
 
+exports.askAIQuestion = async (req, res) => {
+  const { question, jobDescription } = req.body;
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
+
+  let userId;
+  try {
+    const decoded = require("jsonwebtoken").verify(token, process.env.JWT_SECRET);
+    userId = decoded.userId || decoded.id;
+  } catch (err) {
+    console.error("Token decode error:", err);
+    return res.status(403).json({ error: "Invalid token" });
+  }
+
+  if (!question || !jobDescription) {
+    return res.status(400).json({ error: 'Missing question or job description' });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.resumeText) {
+      return res.status(404).json({ error: 'Resume not found. Please upload it first.' });
+    }
+
+    const resumeText = user.resumeText;
+
+    const messages = [
+      {
+        role: 'system',
+        content: 'You are an expert AI career assistant helping users with job application queries.'
+      },
+      {
+        role: 'user',
+        content: `
+Resume:
+${resumeText}
+
+Job Description:
+${jobDescription}
+
+User Question:
+${question}
+
+Give a clear and helpful answer as if guiding the candidate. Respond in this JSON format:
+{
+  "response": "<your response>"
+}`
+      }
+    ];
+
+    const response = await axios.post(
+      'https://adihub3504002192.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview',
+      {
+        messages,
+        temperature: 0.7
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': process.env.AZURE_API_KEY
+        }
+      }
+    );
+
+    const message = response.data.choices[0]?.message?.content;
+    let json;
+    try {
+      json = JSON.parse(message);
+    } catch (parseErr) {
+      console.error('JSON parse error in askAIQuestion:', parseErr);
+      return res.status(500).json({ error: 'Failed to parse AI response' });
+    }
+
+    res.json(json);
+  } catch (err) {
+    console.error('Error in askAIQuestion:', err);
+    res.status(500).json({ error: 'Failed to answer question' });
+  }
+};
+
 // Ensure all controller functions are exported for route setup
 module.exports = {
   generateAnswer: exports.generateAnswer,
   analyzeResume: exports.analyzeResume,
   submitFeedback: exports.submitFeedback,
   generateRecruiterAnswers: exports.generateRecruiterAnswers,
-  scoreResumeAgainstJD: exports.scoreResumeAgainstJD
+  scoreResumeAgainstJD: exports.scoreResumeAgainstJD,
+  askAIQuestion: exports.askAIQuestion,
 };

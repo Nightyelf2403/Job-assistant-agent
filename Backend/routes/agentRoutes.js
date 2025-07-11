@@ -7,8 +7,7 @@ const {
   submitFeedback,
   generateRecruiterAnswers,
   scoreResumeAgainstJD,
-  
-  
+  askAIQuestion,
 } = require('../controllers/agentController');
 
 const router = express.Router();
@@ -19,8 +18,9 @@ router.post('/resume/analyze', upload.single('resume'), analyzeResume);
 router.post('/feedback', submitFeedback); // Optional feedback
 router.post('/generate/recruiter-answers', generateRecruiterAnswers);
 router.post('/generate/score', authenticateToken, scoreResumeAgainstJD);
-
+router.post('/generate/ask', authenticateToken, askAIQuestion);
 console.log('✅ /api/generate/score route loaded');
+console.log('✅ /api/generate/ask route loaded');
 
 
 

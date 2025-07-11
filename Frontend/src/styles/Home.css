@@ -114,3 +114,45 @@ footer {
   border-right: 3px solid #4f46e5; /* Indigo */
   animation: typing 3s steps(30, end), blinkCaret 0.75s step-end infinite;
 }
+
+/* 🌈 Gradient Hero Section */
+.hero-gradient {
+  background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
+  color: white;
+  padding: 4rem 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+}
+
+/* 🎥 Smooth Hover Scale */
+.hover-scale {
+  transition: transform 0.3s ease;
+}
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* 🎉 Pop Animation */
+@keyframes pop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.pop-animation {
+  animation: pop 0.3s ease-out;
+}
+
+/* 📌 Highlighted Score Badge */
+.score-badge {
+  @apply bg-green-500 text-white px-3 py-1 rounded-full font-semibold shadow-lg;
+}
+
+/* 🧩 Fancy Card */
+.fancy-card {
+  @apply bg-white rounded-xl p-6 shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl;
+}

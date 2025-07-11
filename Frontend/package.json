@@ -12,7 +12,9 @@
   "dependencies": {
     "aos": "^2.3.4",
     "axios": "^1.10.0",
+    "framer-motion": "^12.23.3",
     "react": "^19.1.0",
+    "react-circular-progressbar": "^2.2.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.3",
     "react-select": "^5.10.1"

@@ -1,11 +1,27 @@
 import axios from 'axios';
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import "react-circular-progressbar/dist/styles.css";
+import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "../styles/TailoredResumePage.css";
 
 const TailoredResumePage = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [rawResumeText, setRawResumeText] = useState("");
   const [showFullText, setShowFullText] = useState(false);
+
+  const [isResumeModalOpen, setResumeModalOpen] = useState(false);
+
+  const closeModalOnEsc = (e) => {
+    if (e.key === "Escape") {
+      setResumeModalOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("keydown", closeModalOnEsc);
+    return () => window.removeEventListener("keydown", closeModalOnEsc);
+  }, []);
 
   useEffect(() => {
     const fetchResume = async () => {
@@ -51,7 +67,7 @@ const TailoredResumePage = () => {
           if (recheck.data.resumeText) {
             setRawResumeText(recheck.data.resumeText);
           } else {
-            setRawResumeText("Resume extraction failed or is still processing.");
+            setRawResumeText("Resume extraction failed or is still processing. If you Didn't Uploaded Resume Please Upload It.");
           }
         }
       } catch (err) {
@@ -98,16 +114,49 @@ const TailoredResumePage = () => {
   ]);
   const [customQuestion, setCustomQuestion] = useState("");
   const [aiResponse, setAiResponse] = useState("");
+  const [displayedResponse, setDisplayedResponse] = useState("");
+
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      setDisplayedResponse(aiResponse.slice(0, i));
+      if (i >= aiResponse.length) clearInterval(interval);
+      i++;
+    }, 20);
+    return () => clearInterval(interval);
+  }, [aiResponse]);
 
   const handleAskAI = async () => {
-    if (!customQuestion || !rawResumeText || !jobDescription) return;
+    if (!customQuestion) {
+      alert("Please type a question.");
+      return;
+    }
+    if (!jobDescription) {
+      alert("Please paste the job description first.");
+      return;
+    }
+    if (!rawResumeText) {
+      alert("Resume text not found. Please upload your resume.");
+      return;
+    }
 
     try {
-      const res = await axios.post('http://localhost:5050/api/tailored/ask', {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No auth token found.");
+        return;
+      }
+
+      const res = await axios.post('http://localhost:5050/api/generate/ask', {
         resumeText: rawResumeText,
         jobDescription,
         question: customQuestion
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
+
       setAiResponse(res.data.answer);
     } catch (err) {
       console.error("❌ Failed to get AI response:", err);
@@ -116,39 +165,81 @@ const TailoredResumePage = () => {
   };
 
   const evaluateScore = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("❌ No auth token found in localStorage.");
+      return;
+    }
+
+    console.log("📨 Sending match score request...");
+    console.log("🔑 Token:", token);
+    console.log("📝 Resume Text:", rawResumeText.slice(0, 5000) + "...");
+    console.log("📄 Job Description:", jobDescription.slice(0, 5000) + "...");
+
     try {
-      const res = await axios.post('http://localhost:5050/api/tailored/score', {
+      const res = await axios.post('http://localhost:5050/api/generate/score', {
         resumeText: rawResumeText,
         jobDescription
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
+
+      console.log("✅ Match score response:", res.data);
       setMatchScore(res.data.score);
       setScoreReasons(res.data.points);
+
+      // Optional: trigger confetti if score > 80
+      // if (res.data.score > 80) {
+      //   import('canvas-confetti').then(({ default: confetti }) => {
+      //     confetti();
+      //   });
+      // }
     } catch (err) {
-      console.error("❌ Failed to get match score:", err);
+      console.error("❌ Failed to get match score:", err.response?.data || err.message);
     }
   };
 
   return (
-    <div className="resume-score-container">
+    <motion.div
+      className="resume-score-container"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+    >
       <h2>Tailored Resume & JD Match</h2>
 
-      <div className="section">
-        <h4>Job Description Input</h4>
-        <textarea
-          placeholder="Paste the job description here..."
-          value={jobDescription}
-          onChange={(e) => setJobDescription(e.target.value)}
-          onBlur={evaluateScore}
-        ></textarea>
-      </div>
+      <motion.div
+        initial={{ x: -30, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="section">
+          <h4>Job Description Input</h4>
+          <textarea
+            placeholder="Paste the job description here..."
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+            onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px #00c6ff'}
+            onBlur={(e) => e.target.style.boxShadow = 'none'}
+          ></textarea>
+          <button onClick={evaluateScore} className="primary-btn">Get Match Score</button>
+        </div>
+      </motion.div>
 
       <div className="grid-section">
-        <div className="resume-view">
+        <motion.div
+          className="resume-view"
+          initial={{ x: -30, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
           <h4>Extracted Resume View</h4>
-          <button onClick={handleFetchResumeText} className="fetch-btn">
+          <button onClick={handleFetchResumeText} className="secondary-btn">
             Fetch Extracted Resume
           </button>
-          <div className="raw-resume-text">
+          <div className="raw-resume-text" onClick={() => setResumeModalOpen(true)}>
             {rawResumeText ? (
               <>
                 <div className={`resume-text-container ${showFullText ? 'expanded' : 'collapsed'}`}>
@@ -178,37 +269,104 @@ const TailoredResumePage = () => {
               <p>No extracted resume text available.</p>
             )}
           </div>
-        </div>
+        </motion.div>
 
-        <div className="score-answer-section">
-          <div className="score-box">
-            <h4>Resume Match Score</h4>
-            <div className="score-circle">{matchScore}/100</div>
-            <ul>
-              {scoreReasons.map((reason, idx) => (
-                <li key={idx}>{reason}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="ai-question-box">
-            <h4>Ask AI a Question</h4>
-            <input
-              type="text"
-              value={customQuestion}
-              onChange={(e) => setCustomQuestion(e.target.value)}
-              placeholder="Type your recruiter question here..."
+        <motion.div
+          className="score-box"
+          key={matchScore}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 200 }}
+        >
+          <h4>Resume Match Score</h4>
+          <div style={{ width: 100, height: 100, marginBottom: "1rem" }}>
+            <CircularProgressbar
+              value={matchScore}
+              text={`${matchScore}/100`}
+              styles={buildStyles({
+                textSize: "16px",
+                pathColor: `#00c6ff`,
+                textColor: "#005bea",
+                trailColor: "#d6d6d6",
+                backgroundColor: "#f8f9fa"
+              })}
             />
-            <button onClick={handleAskAI}>Ask AI</button>
-            {aiResponse && (
-              <div className="ai-answer">
-                <p>{aiResponse}</p>
-              </div>
-            )}
           </div>
-        </div>
+          <ul>
+            {scoreReasons.map((reason, idx) => (
+              <li key={idx}>{reason}</li>
+            ))}
+          </ul>
+        </motion.div>
+
+        <motion.div
+          className="ai-question-box"
+          initial={{ x: -30, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h4>Ask AI a Question</h4>
+          <input
+            type="text"
+            value={customQuestion}
+            onChange={(e) => setCustomQuestion(e.target.value)}
+            placeholder="Type your recruiter question here..."
+          />
+          <button onClick={handleAskAI}>Ask AI</button>
+          {aiResponse && (
+            <motion.div
+              className="ai-answer"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <p>{displayedResponse}</p>
+            </motion.div>
+          )}
+        </motion.div>
       </div>
-    </div>
+
+      {isResumeModalOpen && (
+        <div className="modal-overlay" style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }} onClick={() => setResumeModalOpen(false)}>
+          <motion.div
+            className="modal-content"
+            initial={{ y: "-100vh" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100vh" }}
+            transition={{ type: "spring", damping: 20 }}
+            style={{
+              maxWidth: '80%',
+              width: '800px',
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              backgroundColor: '#fff',
+              padding: '2rem',
+              borderRadius: '12px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+              margin: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ marginBottom: '1rem', fontWeight: '600' }}>Extracted Resume</h2>
+            <pre style={{ whiteSpace: 'pre-wrap', maxHeight: '400px', overflowY: 'auto' }}>{rawResumeText}</pre>
+            <button className="close-btn" style={{ marginTop: '1rem', padding: '8px 16px', backgroundColor: '#f44336', color: '#fff', border: 'none', borderRadius: '4px' }} onClick={() => setResumeModalOpen(false)}>
+              Close
+            </button>
+          </motion.div>
+        </div>
+      )}
+    </motion.div>
   );
 };
 
