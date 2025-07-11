@@ -467,6 +467,7 @@ Give a clear and helpful answer as if guiding the candidate. Respond in this JSO
 }`
       }
     ];
+    console.log("🧠 Incoming AI question:", question);
 
     const response = await axios.post(
       'https://adihub3504002192.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview',
@@ -483,6 +484,7 @@ Give a clear and helpful answer as if guiding the candidate. Respond in this JSO
     );
 
     const message = response.data.choices[0]?.message?.content;
+    console.log("💬 Raw AI response:", message);
     let json;
     try {
       json = JSON.parse(message);
@@ -490,8 +492,8 @@ Give a clear and helpful answer as if guiding the candidate. Respond in this JSO
       console.error('JSON parse error in askAIQuestion:', parseErr);
       return res.status(500).json({ error: 'Failed to parse AI response' });
     }
-
-    res.json(json);
+    console.log("✅ Parsed AI response:", json.response);
+    res.json({ answer: json.response });
   } catch (err) {
     console.error('Error in askAIQuestion:', err);
     res.status(500).json({ error: 'Failed to answer question' });

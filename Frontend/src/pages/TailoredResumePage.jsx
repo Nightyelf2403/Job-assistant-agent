@@ -116,15 +116,16 @@ const TailoredResumePage = () => {
   const [aiResponse, setAiResponse] = useState("");
   const [displayedResponse, setDisplayedResponse] = useState("");
 
-  useEffect(() => {
-    let i = 0;
-    const interval = setInterval(() => {
-      setDisplayedResponse(aiResponse.slice(0, i));
-      if (i >= aiResponse.length) clearInterval(interval);
-      i++;
-    }, 20);
-    return () => clearInterval(interval);
-  }, [aiResponse]);
+useEffect(() => {
+  let i = 0;
+  setDisplayedResponse(""); // Reset before starting
+  const interval = setInterval(() => {
+    setDisplayedResponse((prev) => aiResponse.slice(0, i));
+    if (i >= aiResponse.length) clearInterval(interval);
+    i++;
+  }, 20);
+  return () => clearInterval(interval);
+}, [aiResponse]);
 
   const handleAskAI = async () => {
     if (!customQuestion) {
