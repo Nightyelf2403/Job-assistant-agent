@@ -161,8 +161,12 @@ exports.submitFeedback = async (req, res) => {
     res.status(500).json({ error: 'Failed to store feedback' });
   }
 };
+console.log("✅ /api/generate/recruiter-answers route loaded");
 exports.generateRecruiterAnswers = async (req, res) => {
+  console.log("🚀 recruiter-answers endpoint HIT", req.body);
   const { jobId, userId, questions } = req.body;
+
+  console.log("🟡 Checking if jobId or questions changed:", { jobId, questions });
 
   if (!jobId || !userId || !Array.isArray(questions) || questions.length === 0) {
     return res.status(400).json({ error: 'Missing jobId, userId, or questions' });
@@ -184,6 +188,8 @@ exports.generateRecruiterAnswers = async (req, res) => {
     console.error('❌ Job or User not found for recruiter answer generation.');
     return res.status(404).json({ error: 'Job or user not found' });
   }
+
+  console.log("📌 Job and user data confirmed. Proceeding to generate answers...");
 
   // Ensure job is saved in SuggestedJob table for tracking (avoid duplicate save if exists)
   try {
@@ -261,6 +267,7 @@ Respond ONLY in this JSON format:
     let json;
     try {
       json = JSON.parse(message);
+      console.log("📥 Parsed AI recruiter answers:", json);
     } catch (parseErr) {
       console.error('JSON parse error in generateRecruiterAnswers:', parseErr);
       return res.status(500).json({ error: 'Failed to parse AI response' });
@@ -296,6 +303,8 @@ Respond ONLY in this JSON format:
     } catch (err) {
       console.error("⚠️ Cover letter generation failed:", err);
     }
+
+    console.log("📦 Saving application with recruiter answers and cover letter...");
 
     // Save to Application table
     try {
@@ -440,4 +449,14 @@ exports.generateCoverLetter = async (req, res) => {
     console.error('Cover letter generation error:', err);
     res.status(500).json({ error: 'Failed to generate cover letter' });
   }
+};
+
+// Ensure all controller functions are exported for route setup
+module.exports = {
+  generateAnswer: exports.generateAnswer,
+  analyzeResume: exports.analyzeResume,
+  submitFeedback: exports.submitFeedback,
+  generateRecruiterAnswers: exports.generateRecruiterAnswers,
+  scoreResumeAgainstJD: exports.scoreResumeAgainstJD,
+  generateCoverLetter: exports.generateCoverLetter
 };
