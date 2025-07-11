@@ -1,28 +1,43 @@
-⸻
+# 🤖 Job Assistant Agent
 
-
-# 🚀 Job Assistant Agent
-
-An AI-powered job application assistant that helps users apply to jobs smarter and faster — by autofilling applications, tailoring recruiter answers, and scoring resume-to-JD matches using AI.
+An AI-powered job application assistant that helps users apply smarter and faster using their resume, preferences, and powerful AI agents.
 
 ---
 
-## 👤 Built by
-**Lalith Aditya** — Full-Stack Developer (Frontend + Backend)
+![React](https://img.shields.io/badge/React-Frontend-blue)
+![Node.js](https://img.shields.io/badge/Node.js-Backend-green)
+![Prisma](https://img.shields.io/badge/Prisma-ORM-blueviolet)
+![Status](https://img.shields.io/badge/Status-In%20Progress-yellow)
 
 ---
 
-## 📌 Features
+## 📚 Table of Contents
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Screenshots](#-screenshots)
+- [Setup Guide](#-how-to-set-up-locally)
+- [Folder Structure](#-folder-structure)
+- [Future Enhancements](#-future-enhancements)
 
-- 📝 Multi-step profile form with resume upload & job preferences
-- 🤖 AI Agents:
-  - **Autofill Agent** – Fills job applications using saved profile
-  - **Resume-to-JD Score Agent** – Scores how well your resume fits a job
-  - **Tailored Answer Agent** – Generates recruiter answers with AI
-- 📄 AI-generated cover letter
-- 💼 Suggested Jobs via RapidAPI JSearch + AI-filtered ones
-- 📊 Application Tracker (status, progress)
-- 🔍 Custom JD matching and Q&A in Tailored Resume page
+---
+
+## 🚀 Features
+
+| Feature                    | Status     | AI-Powered |
+|---------------------------|------------|------------|
+| ✅ Autofill Agent         | Completed  | Yes        |
+| ✅ Resume-JD Score Agent  | Completed  | Yes        |
+| ✅ Tailored Answers       | Completed  | Yes        |
+| ✅ Cover Letter Generator | Completed  | Yes        |
+| 🟡 External Form Submit   | Pending    | Soon       |
+| ✅ Application Tracker    | Completed  | Yes        |
+
+- Multi-step user profile form (resume, preferences, skills)
+- Job suggestions from JSearch API + AI filtering
+- Autofill job application with resume + recruiter questions
+- Resume vs JD scoring and insights
+- Tailored cover letter and answer generation
+- Application Tracker with status updates
 
 ---
 
@@ -30,84 +45,94 @@ An AI-powered job application assistant that helps users apply to jobs smarter a
 
 | Frontend            | Backend              | AI Services              | Database |
 |---------------------|----------------------|---------------------------|----------|
-| React + TailwindCSS | Node.js + Express    | DeepSeek R1 (via Azure)  | PostgreSQL + Prisma |
-| React Router        | Zod Validation       | RapidAPI JSearch         | Multer for file upload |
+| React + TailwindCSS | Node.js + Express    | DeepSeek R1 (Azure-hosted)| PostgreSQL + Prisma |
+| React Router        | Zod Validation       | RapidAPI JSearch          | Multer for file upload |
 
 ---
 
-## 🛠️ How to Clone & Run Locally
+## 🖼️ Screenshots
+
+> 🧑‍💼 **Dashboard View**  
+![Dashboard](./Images/Dashboard.png)
+
+> 📝 **Tailored JD Matching Page**  
+![JD Page](./Images/JDPage.png)
+
+---
+
+## 🛠️ How to Set Up Locally
 
 ### 🔁 Clone the Repo
 ```bash
 git clone https://github.com/your-username/Job-Assistant-Agent.git
 cd Job-Assistant-Agent
+```
 
+---
 
-⸻
+### 🖥️ Backend Setup
 
-🖥️ Run Backend
-	1.	Navigate to backend folder:
-
+```bash
 cd Backend
-
-	2.	Install dependencies:
-
 npm install
+```
 
-	3.	Create .env file:
-
+Create a `.env` file in the root of `Backend` folder:
+```env
 PORT=5000
 DATABASE_URL=your_postgres_db_url
 AZURE_API_KEY=your_azure_key
 AZURE_API_ENDPOINT=https://your-azure-endpoint
 RAPID_API_KEY=your_rapidapi_key
+```
 
-	4.	Run Prisma:
-
+Run Prisma migrations:
+```bash
 npx prisma generate
 npx prisma migrate dev --name init
+```
 
-	5.	Start the server:
-
+Start backend server:
+```bash
 npm run dev
+```
 
-Server runs at: http://localhost:5000
+---
 
-⸻
+### 🌐 Frontend Setup
 
-🌐 Run Frontend
-	1.	Open a new terminal and go to frontend:
-
+```bash
 cd ../Frontend
-
-	2.	Install dependencies:
-
 npm install
+```
 
-	3.	Create .env file:
-
+Create a `.env` file in the root of `Frontend` folder:
+```env
 VITE_BACKEND_URL=http://localhost:5000
+```
 
-	4.	Start the dev server:
-
+Start frontend dev server:
+```bash
 npm run dev
+```
 
-Frontend runs at: http://localhost:5173
+Open: `http://localhost:5173`
 
-⸻
+---
 
-🧪 Testing the App Locally
-	•	Visit: http://localhost:5173
-	•	Sign up or log in with test user
-	•	Upload resume & fill profile
-	•	View suggested jobs → click Auto Apply
-	•	Review recruiter answers, cover letter
-	•	Application gets tracked in the dashboard
+## 🧪 Testing the App Locally
 
-⸻
+- Sign up or log in with test user
+- Upload resume and set preferences
+- View Suggested Jobs → click Auto Apply
+- Review recruiter answers, cover letter
+  
 
-📁 Folder Structure
+---
 
+## 📁 Folder Structure
+
+```
 Job-Assistant-Agent/
 ├── Backend/
 │   ├── controllers/
@@ -120,16 +145,18 @@ Job-Assistant-Agent/
 │   │   ├── pages/
 │   │   └── api.js
 │   └── index.html
+└── Images/
+    ├── Dashboard.png
+    └── JDPage.png
+```
 
+---
 
-⸻
+## 💡 Future Enhancements
 
-💡 Future Enhancements
-	•	Submit job to external forms (currently only saved/tracked)
-	•	AI-powered resume rewriting
-	•	Google OAuth sign-in
-	•	JD scoring analytics & resume visualizations
-	•	Email alerts for matching jobs
-	•	Unit + integration tests
-
-⸻
+- Submit job to external forms (not just track)
+- AI-powered resume rewriting
+- Google OAuth login
+- JD scoring analytics & visual insights
+- Email job alerts
+- Unit & integration tests
