@@ -1,6 +1,7 @@
 // controllers/applicationController.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const nodemailer = require('nodemailer');
 
 // ✅ Autofill Agent: Submit application using user profile the application
 const autofillApplication = async (req, res) => {
@@ -96,7 +97,64 @@ const generateAnswerForQuestions = async (req, res) => {
   }
 };
 
+
+// ✅ AI Application Submission with Email Notification
+const aiSubmitApplication = async (req, res) => {
+  const {
+    jobId, userId, title, company, location,
+    description, answers, coverLetter, userProfile
+  } = req.body;
+
+  if (!jobId || !userId || !title || !company) {
+    return res.status(400).json({ error: 'Missing required job or user fields.' });
+  }
+
+  try {
+    const application = await prisma.application.create({
+      data: {
+        jobId,
+        userId,
+        jobTitle: title,
+        company,
+        location,
+        description,
+        answers,
+        coverLetter,
+        status: 'applied',
+        dateApplied: new Date()
+      }
+    });
+
+    if (userProfile?.email) {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `"Job Assistant" <${process.env.EMAIL_USER}>`,
+        to: userProfile.email,
+        subject: `✅ Application Submitted: ${title} at ${company}`,
+        html: `
+          <p>Hi ${userProfile.name || "there"},</p>
+          <p>Your application for <strong>${title}</strong> at <strong>${company}</strong> was submitted using Job Assistant AI.</p>
+          <p>We wish you the best of luck! 🚀</p>
+        `
+      });
+    }
+
+    res.status(201).json({ message: 'Application submitted with AI', application });
+  } catch (err) {
+    console.error('❌ AI application submission failed:', err);
+    res.status(500).json({ error: 'AI submission failed', detail: err.message });
+  }
+};
+
 module.exports = {
   autofillApplication,
-  generateAnswerForQuestions
+  generateAnswerForQuestions,
+  aiSubmitApplication
 };

@@ -64,9 +64,26 @@ useEffect(() => {
       console.error("❌ Failed to fetch user:", err);
     }
   }
-  if (shouldRefresh) {
+  if (shouldRefresh || !user) {
     fetchUser();
   }
+  // eslint-disable-next-line
+}, []);
+
+// Fallback effect to fetch user on initial render if not already present
+useEffect(() => {
+  if (!user) {
+    async function fetchUser() {
+      try {
+        const res = await API.get(`/users/${userId}`);
+        setUser(res.data);
+      } catch (err) {
+        console.error("❌ Failed to fetch user:", err);
+      }
+    }
+    fetchUser();
+  }
+  // eslint-disable-next-line
 }, []);
 
   // Fetch recruiter answers when a job is selected
@@ -205,6 +222,7 @@ useEffect(() => {
     };
   }, [selectedJob]);
 
+  if (!userId) return <div className="p-8">Please sign in again. Missing user ID.</div>;
   if (!user) return <div className="p-8">Sign-In or Sign-Up To View DashBoard!!...</div>;
 
 return (
