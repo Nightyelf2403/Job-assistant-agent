@@ -97,7 +97,6 @@ const generateAnswerForQuestions = async (req, res) => {
   }
 };
 
-
 // ✅ AI Application Submission with Email Notification
 const aiSubmitApplication = async (req, res) => {
   const {
@@ -125,6 +124,8 @@ const aiSubmitApplication = async (req, res) => {
       }
     });
 
+    console.log("✅ Application saved:", application);
+
     if (userProfile?.email) {
       const transporter = nodemailer.createTransport({
         service: "gmail",
@@ -137,13 +138,15 @@ const aiSubmitApplication = async (req, res) => {
       await transporter.sendMail({
         from: `"Job Assistant" <${process.env.EMAIL_USER}>`,
         to: userProfile.email,
-        subject: `✅ Application Submitted: ${title} at ${company}`,
+        subject: `✅ Application Submitted: About the Job - ${title} at ${company}`,
         html: `
           <p>Hi ${userProfile.name || "there"},</p>
           <p>Your application for <strong>${title}</strong> at <strong>${company}</strong> was submitted using Job Assistant AI.</p>
           <p>We wish you the best of luck! 🚀</p>
         `
       });
+
+      console.log("📧 Email sent to:", userProfile.email);
     }
 
     res.status(201).json({ message: 'Application submitted with AI', application });

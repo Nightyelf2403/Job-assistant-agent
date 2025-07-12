@@ -10,7 +10,6 @@ const {
   scoreResumeAgainstJD,
   askAIQuestion,
   startAutofillApplication,
-  generateAnswerForQuestions
 } = require('../controllers/agentController');
 
 const router = express.Router();
@@ -20,7 +19,6 @@ router.post('/generate/answer', generateAnswer);
 router.post('/resume/analyze', upload.single('resume'), analyzeResume);
 router.post('/feedback', submitFeedback); // Optional feedback
 router.post('/generate/recruiter-answers', generateRecruiterAnswers);
-router.post('/generate/answer-questions/:userId', generateAnswerForQuestions);
 router.post('/generate/score', authenticateToken, scoreResumeAgainstJD);
 router.post('/generate/ask', authenticateToken, askAIQuestion);
 router.post('/autofill-start', startAutofillApplication);
