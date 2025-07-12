@@ -15,6 +15,7 @@ export default function AutoFillApplication() {
   const [customQuestion, setCustomQuestion] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
   const [showTip, setShowTip] = useState(true);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     async function fetchJobDetails() {
@@ -132,7 +133,6 @@ export default function AutoFillApplication() {
 
   const handleSubmit = async () => {
     try {
-      // Save job in SuggestedJob table before applying
       await API.post("/suggested-jobs", {
         id: jobId,
         title: job.job_title,
@@ -142,7 +142,8 @@ export default function AutoFillApplication() {
         userId: job.userId,
         isAI: true
       });
-      const res = await API.post("/applications/apply", {
+
+      await API.post("/applications/ai-submit", {
         jobId,
         userId: job.userId,
         title: job.job_title,
@@ -150,12 +151,14 @@ export default function AutoFillApplication() {
         location: job.locations?.join(", ") || "",
         description: job.description,
         answers: questions,
-        coverLetter
+        coverLetter,
+        userProfile
       });
-      alert("✅ Application submitted!");
-      // Don't navigate to dashboard here — it's already added in SuggestedJob click
+
+      setShowSuccessModal(true);
+      setTimeout(() => navigate("/dashboard"), 10000);
     } catch (err) {
-      console.error("❌ Failed to save application:", err);
+      console.error("❌ Failed to submit AI application:", err);
       alert("❌ Failed to submit application");
     }
   };
@@ -292,6 +295,14 @@ export default function AutoFillApplication() {
           Submit Application
         </button>
       </div>
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow text-center">
+            <h2 className="text-xl font-semibold mb-2">🎉 Application Submitted!</h2>
+            <p className="text-sm text-gray-700">Redirecting to your dashboard in 10 seconds...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
