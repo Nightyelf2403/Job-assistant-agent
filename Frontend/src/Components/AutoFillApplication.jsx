@@ -133,29 +133,42 @@ export default function AutoFillApplication() {
 
   const handleSubmit = async () => {
     try {
-      await API.post("/suggested-jobs", {
-        id: jobId,
-        title: job.job_title,
-        company: job.company_name,
-        location: job.locations?.join(", ") || "",
-        description: job.description,
-        userId: job.userId,
-        isAI: true
-      });
+      // Removed: suggested job saving on AI submit
+      // await API.post("/suggested-jobs", {
+      //   id: jobId,
+      //   title: job.job_title,
+      //   company: job.company_name,
+      //   location: job.locations?.join(", ") || "",
+      //   description: job.description,
+      //   userId: job.userId,
+      //   isAI: true
+      // });
 
-      await API.post("/api/applications/ai-submit'", {
+      await API.post("/applications/ai-submit", {
         jobId,
         userId: job.userId,
         title: job.job_title,
         company: job.company_name,
-        location: job.locations?.join(", ") || "",
+        location: (Array.isArray(job.locations) ? job.locations[0] : job.location || "") || "",
         description: job.description,
-        answers: questions,
+        answers: questions.map(q => q.answer),
         coverLetter,
-        userProfile
+        userProfile: {
+          email: userProfile?.email,
+          name: userProfile?.name,
+          resumeText: userProfile?.resumeText || ""
+        }
       });
 
       setShowSuccessModal(true);
+      // Countdown timer for modal
+      let countdown = 10;
+      const interval = setInterval(() => {
+        countdown--;
+        const el = document.getElementById("countdown");
+        if (el) el.innerText = countdown;
+        if (countdown === 0) clearInterval(interval);
+      }, 1000);
       setTimeout(() => navigate("/dashboard"), 10000);
     } catch (err) {
       console.error("❌ Failed to submit AI application:", err);
@@ -297,9 +310,18 @@ export default function AutoFillApplication() {
       </div>
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow text-center">
+          <div className="bg-white p-6 rounded shadow text-center relative w-96">
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-lg"
+              title="Close"
+            >
+              ✕
+            </button>
             <h2 className="text-xl font-semibold mb-2">🎉 Application Submitted!</h2>
-            <p className="text-sm text-gray-700">Redirecting to your dashboard in 10 seconds...</p>
+            <p className="text-sm text-gray-700 mb-1">
+              Redirecting to your dashboard in <span id="countdown">10</span> seconds...
+            </p>
           </div>
         </div>
       )}

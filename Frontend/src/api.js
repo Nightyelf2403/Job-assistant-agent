@@ -17,3 +17,14 @@ API.interceptors.request.use((config) => {
 });
 
 export default API;
+
+// Submit AI application
+export const submitAIApplication = async (data) => {
+  try {
+    const response = await API.post('/applications/ai-submit', data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Failed to submit AI application:', error.response?.data || error.message);
+    throw error;
+  }
+};
