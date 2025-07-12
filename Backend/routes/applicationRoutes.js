@@ -7,6 +7,6 @@ console.log("✅ POST /:id/autofill route loaded");
 router.post('/:id/autofill', autofillApplication);
 
 console.log("✅ POST /applications/ai-submit route loaded");
-router.post("/applications/ai-submit", aiSubmitApplication);
+router.post("/ai-submit", aiSubmitApplication);
 
 module.exports = router;

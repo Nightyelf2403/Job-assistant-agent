@@ -143,7 +143,7 @@ export default function AutoFillApplication() {
         isAI: true
       });
 
-      await API.post("/applications/ai-submit", {
+      await API.post("/api/applications/ai-submit'", {
         jobId,
         userId: job.userId,
         title: job.job_title,

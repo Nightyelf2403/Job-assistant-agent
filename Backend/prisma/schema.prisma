@@ -47,6 +47,7 @@ model Application {
   applyLink        String?
   source           String?
   recruiterAnswers Json?
+  answers          Json?
   coverLetter      String?
   dateApplied      DateTime @default(now())
   status           String @default("in-progress")
