@@ -511,9 +511,9 @@ return (
               </tr>
             </thead>
             <tbody>
-              {user?.applications?.map((app, idx) => (
+              {[...new Map(user?.applications?.map(app => [`${app.jobTitle}-${app.company}`, app])).values()].map((app, idx) => (
                 <tr key={idx} className="bg-white border-b">
-                  <td className="px-4 py-2">{app.title}</td>
+                  <td className="px-4 py-2">{app.jobTitle || app.title}</td>
                   <td className="px-4 py-2">{app.company}</td>
                   <td className="px-4 py-2">{new Date(app.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-2 text-green-600">

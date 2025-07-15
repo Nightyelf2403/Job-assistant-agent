@@ -133,30 +133,33 @@ export default function AutoFillApplication() {
 
   const handleSubmit = async () => {
     try {
-      // Removed: suggested job saving on AI submit
-      // await API.post("/suggested-jobs", {
-      //   id: jobId,
-      //   title: job.job_title,
-      //   company: job.company_name,
-      //   location: job.locations?.join(", ") || "",
-      //   description: job.description,
-      //   userId: job.userId,
-      //   isAI: true
-      // });
+      if (!questions.some(q => q.answer.trim())) {
+        alert("Please answer at least one recruiter question.");
+        return;
+      }
+
+      const cleanDescription = job.description
+        ?.replace(/Position Information:\s*/i, '')
+        ?.replace(/[\r\n•]+/g, ' ')
+        ?.replace(/\s+/g, ' ')
+        ?.trim();
+
+      const location = job.locations?.[0] || job.location || "Washington, DC";
 
       await API.post("/applications/ai-submit", {
         jobId,
         userId: job.userId,
-        title: job.job_title,
-        company: job.company_name,
-        location: (Array.isArray(job.locations) ? job.locations[0] : job.location || "") || "",
-        description: job.description,
-        answers: questions.map(q => q.answer),
-        coverLetter,
+        jobTitle: job.job_title,
+        company: job.company_name || "Unknown Company",
+        location,
+        description: cleanDescription,
+        answers: questions.map(q => q.answer).filter(a => a.trim() !== ""),
+        coverLetter: coverLetter.trim(),
+        status: "applied",
+        dateApplied: new Date().toISOString(),
         userProfile: {
           email: userProfile?.email,
-          name: userProfile?.name,
-          resumeText: userProfile?.resumeText || ""
+          name: userProfile?.name
         }
       });
 

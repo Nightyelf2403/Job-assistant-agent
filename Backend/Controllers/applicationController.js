@@ -27,6 +27,41 @@ const autofillApplication = async (req, res) => {
       }
     });
 
+    if (user?.email) {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `"Job Assistant" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject: `✅ Application Submitted: ${job.title} at ${job.company}`,
+        html: `
+          <p>Hi ${user.name || "there"},</p>
+          <p>You have successfully submitted your application using Autofill Agent!</p>
+          <h3>🧾 Application Details</h3>
+          <ul>
+            <li><strong>Job Title:</strong> ${job.title}</li>
+            <li><strong>Company:</strong> ${job.company}</li>
+            <li><strong>Location:</strong> ${job.location}</li>
+            <li><strong>Date Applied:</strong> ${new Date().toLocaleDateString()}</li>
+          </ul>
+          ${job.coverLetter ? `<h4>📄 Cover Letter</h4><p>${job.coverLetter}</p>` : ''}
+          ${Array.isArray(job.answers) ? `
+            <h4>🧠 Answers</h4>
+            ${job.answers.map((ans, i) => `<p><strong>Q${i + 1}:</strong> ${ans}</p>`).join('')}
+          ` : ''}
+          <p>Best of luck with your application! 🚀</p>
+        `
+      });
+
+      console.log("📧 Email sent to:", user.email);
+    }
+
     res.status(201).json({ message: 'Application submitted via Autofill', application: newApp });
   } catch (err) {
     console.error('❌ Autofill failed:', err);
@@ -100,20 +135,28 @@ const generateAnswerForQuestions = async (req, res) => {
 // ✅ AI Application Submission with Email Notification
 const aiSubmitApplication = async (req, res) => {
   const {
-    jobId, userId, title, company, location,
+    jobId, userId, jobTitle, company, location,
     description, answers, coverLetter, userProfile
   } = req.body;
 
-  if (!jobId || !userId || !title || !company) {
+  if (!jobId || !userId || !jobTitle || !company) {
     return res.status(400).json({ error: 'Missing required job or user fields.' });
   }
+
+  if (!Array.isArray(answers) || answers.length === 0) {
+    return res.status(400).json({ error: 'Answers must be a non-empty array.' });
+  }
+
+  console.log("📥 AI Submit Payload:", {
+    jobId, userId, jobTitle, company, location, description, answers, coverLetter
+  });
 
   try {
     const application = await prisma.application.create({
       data: {
         jobId,
         userId,
-        jobTitle: title,
+        jobTitle,
         company,
         location,
         description,
@@ -138,10 +181,22 @@ const aiSubmitApplication = async (req, res) => {
       await transporter.sendMail({
         from: `"Job Assistant" <${process.env.EMAIL_USER}>`,
         to: userProfile.email,
-        subject: `✅ Application Submitted: About the Job - ${title} at ${company}`,
+        subject: `✅ Application Submitted: ${jobTitle} at ${company}`,
         html: `
           <p>Hi ${userProfile.name || "there"},</p>
-          <p>Your application for <strong>${title}</strong> at <strong>${company}</strong> was submitted using Job Assistant AI.</p>
+          <p>Your application for <strong>${jobTitle}</strong> at <strong>${company}</strong> was submitted using Job Assistant AI.</p>
+          <h3>🧾 Application Details</h3>
+          <ul>
+            <li><strong>Job Title:</strong> ${jobTitle}</li>
+            <li><strong>Company:</strong> ${company}</li>
+            <li><strong>Location:</strong> ${location}</li>
+            <li><strong>Date Applied:</strong> ${new Date().toLocaleDateString()}</li>
+          </ul>
+          ${coverLetter ? `<h4>📄 Cover Letter</h4><p>${coverLetter}</p>` : ''}
+          ${Array.isArray(answers) ? `
+            <h4>🧠 Answers</h4>
+            ${answers.map((ans, i) => `<p><strong>Q${i + 1}:</strong> ${ans}</p>`).join('')}
+          ` : ''}
           <p>We wish you the best of luck! 🚀</p>
         `
       });
@@ -156,8 +211,23 @@ const aiSubmitApplication = async (req, res) => {
   }
 };
 
+const getApplicationsByUser = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const apps = await prisma.application.findMany({
+      where: { userId: id },
+      orderBy: { dateApplied: 'desc' }
+    });
+    res.status(200).json(apps);
+  } catch (err) {
+    console.error("❌ Failed to fetch applications:", err);
+    res.status(500).json({ error: "Failed to fetch applications" });
+  }
+};
+
 module.exports = {
   autofillApplication,
   generateAnswerForQuestions,
-  aiSubmitApplication
+  aiSubmitApplication,
+  getApplicationsByUser
 };

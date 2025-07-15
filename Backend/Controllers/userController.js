@@ -171,7 +171,10 @@ const updateUser = async (req, res) => {
 
 const getUserById = async (req, res) => {
   try {
-    const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      include: { applications: true },
+    });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     // Extract resume text if not already present but resumeLink exists
