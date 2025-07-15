@@ -86,6 +86,15 @@ export default function SignUp() {
         <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded">
           Sign Up
         </button>
+        <p className="text-xs text-center text-gray-600">
+          By signing up, you agree to our{" "}
+          <span
+            onClick={() => navigate("/terms")}
+            className="text-indigo-600 hover:underline cursor-pointer"
+          >
+            Terms and Conditions
+          </span>.
+        </p>
         {error && <p className="text-red-500">{error}</p>}
         <p className="text-sm mt-2 text-center">
           Already a user?{" "}

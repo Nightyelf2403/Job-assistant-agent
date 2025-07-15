@@ -150,7 +150,7 @@ export default function Header() {
               to="/resume-score"
               className="px-4 py-2 rounded-full font-semibold text-sm transition-all text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 shadow-md"
             >
-              Tailor Resume
+              JD Match
             </Link>
           </>
         ) : (

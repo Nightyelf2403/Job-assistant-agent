@@ -205,18 +205,26 @@ useEffect(() => {
   return (
     <motion.div
       className="resume-score-container"
+      style={{
+        backgroundColor: '#fffdf5',
+        borderRadius: '12px',
+        padding: '2rem',
+        boxShadow: '0 4px 10px rgba(0,0,0,0.06)',
+        margin: '2rem auto',
+        maxWidth: '1200px'
+      }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
     >
-      <h2>Tailored Resume & JD Match</h2>
+      <h2>JD Match</h2>
 
       <motion.div
         initial={{ x: -30, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="section">
+        <div className="section" style={{marginTop: '1rem', padding: '1rem', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', borderRadius: '8px', backgroundColor: '#fff' }}>
           <h4>Job Description Input</h4>
           <textarea
             placeholder="Paste the job description here..."
@@ -224,23 +232,25 @@ useEffect(() => {
             onChange={(e) => setJobDescription(e.target.value)}
             onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px #00c6ff'}
             onBlur={(e) => e.target.style.boxShadow = 'none'}
+            style={{width: '100%', minHeight: '120px', borderRadius: '6px', border: '1px solid #ccc', padding: '0.5rem', fontSize: '14px', fontFamily: 'inherit', resize: 'vertical'}}
           ></textarea>
-          <button onClick={evaluateScore} className="primary-btn">Get Match Score</button>
+          <button onClick={evaluateScore} className="primary-btn" style={{marginTop: '1rem'}}>Get Match Score</button>
         </div>
       </motion.div>
 
-      <div className="grid-section">
+      <div className="grid-section" style={{display: 'flex', gap: '1.5rem', marginTop: '2rem', flexWrap: 'wrap', justifyContent: 'space-between'}}>
         <motion.div
           className="resume-view"
           initial={{ x: -30, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5 }}
+          style={{flex: '1 1 45%', minWidth: '300px', backgroundColor: '#fff', padding: '1rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)'}}
         >
           <h4>Extracted Resume View</h4>
-          <button onClick={handleFetchResumeText} className="secondary-btn">
+          <button onClick={handleFetchResumeText} className="secondary-btn" style={{marginTop: '0.5rem', marginBottom: '1rem'}}>
             Fetch Extracted Resume
           </button>
-          <div className="raw-resume-text" onClick={() => setResumeModalOpen(true)}>
+          <div className="raw-resume-text" onClick={() => setResumeModalOpen(true)} style={{cursor: 'pointer'}}>
             {rawResumeText ? (
               <>
                 <div className={`resume-text-container ${showFullText ? 'expanded' : 'collapsed'}`}>
@@ -252,9 +262,9 @@ useEffect(() => {
                       fontSize: '14px',
                       fontFamily: 'monospace',
                       padding: '1rem',
-                      backgroundColor: '#f9f9f9',
+                      backgroundColor: '#fcfcfc',
                       borderRadius: '8px',
-                      border: '1px solid #ccc',
+                      border: '1px solid #e5e7eb',
                       maxHeight: showFullText ? 'none' : '300px',
                       overflowY: 'auto'
                     }}
@@ -262,7 +272,7 @@ useEffect(() => {
                     {showFullText ? rawResumeText : rawResumeText.slice(0, 1000) + "..."}
                   </pre>
                 </div>
-                <button onClick={() => setShowFullText(!showFullText)} className="toggle-btn">
+                <button onClick={() => setShowFullText(!showFullText)} className="toggle-btn" style={{marginTop: '1rem'}}>
                   {showFullText ? "Show Less" : "Show More"}
                 </button>
               </>
@@ -275,6 +285,13 @@ useEffect(() => {
         <motion.div
           className="score-box"
           key={matchScore}
+          style={{
+            backgroundColor: '#eef5ff',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            minWidth: '260px'
+          }}
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 200 }}
@@ -293,7 +310,7 @@ useEffect(() => {
               })}
             />
           </div>
-          <ul>
+          <ul style={{marginTop: '1rem'}}>
             {scoreReasons.map((reason, idx) => (
               <li key={idx}>{reason}</li>
             ))}
@@ -302,6 +319,14 @@ useEffect(() => {
 
         <motion.div
           className="ai-question-box"
+          style={{
+            backgroundColor: '#fff4f5',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            flex: '1 1 40%',
+            minWidth: '280px'
+          }}
           initial={{ x: -30, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -312,14 +337,16 @@ useEffect(() => {
             value={customQuestion}
             onChange={(e) => setCustomQuestion(e.target.value)}
             placeholder="Type your recruiter question here..."
+            style={{width: '100%', padding: '0.5rem', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc', marginTop: '0.5rem'}}
           />
-          <button onClick={handleAskAI}>Ask AI</button>
+          <button onClick={handleAskAI} style={{marginTop: '1rem'}}>Ask AI</button>
           {aiResponse && (
             <motion.div
               className="ai-answer"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.4 }}
+              style={{marginTop: '1rem'}}
             >
               <p>{displayedResponse}</p>
             </motion.div>

@@ -12,12 +12,16 @@
   "dependencies": {
     "aos": "^2.3.4",
     "axios": "^1.10.0",
-    "framer-motion": "^12.23.3",
+    "framer-motion": "^12.23.5",
+    "lottie-react": "^2.4.1",
     "react": "^19.1.0",
     "react-circular-progressbar": "^2.2.0",
+    "react-countup": "^6.5.3",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.3",
-    "react-select": "^5.10.1"
+    "react-select": "^5.10.1",
+    "react-swipeable": "^7.0.2",
+    "typewriter-effect": "^2.22.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",

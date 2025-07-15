@@ -124,6 +124,12 @@ footer {
   box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
 }
 
+.card-border {
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  background-origin: border-box;
+  background-image: linear-gradient(#fff, #fff), linear-gradient(90deg, #7F00FF, #E100FF);
+}
 /* 🎥 Smooth Hover Scale */
 .hover-scale {
   transition: transform 0.3s ease;
@@ -155,4 +161,19 @@ footer {
 /* 🧩 Fancy Card */
 .fancy-card {
   @apply bg-white rounded-xl p-6 shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl;
+}
+
+/* 💡 Did You Know Section */
+.did-you-know {
+  @apply bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md shadow-md my-8;
+  font-size: 1rem;
+  color: #92400e;
+}
+
+.did-you-know-title {
+  @apply font-bold mb-2 text-yellow-800 text-lg;
+}
+
+.did-you-know-text {
+  @apply text-yellow-700;
 }

@@ -1,4 +1,56 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import Lottie from "lottie-react";
+import rocketAnimation from "../assets/platform-growth.json";
+// Custom waving hand animation for the Dashboard header
+// You can move this to your global CSS if desired.
+const style = document.createElement("style");
+style.innerHTML = `
+@keyframes wave {
+  0% { transform: rotate(0.0deg) }
+  10% { transform: rotate(14.0deg) }
+  20% { transform: rotate(-8.0deg) }
+  30% { transform: rotate(14.0deg) }
+  40% { transform: rotate(-4.0deg) }
+  50% { transform: rotate(10.0deg) }
+  60% { transform: rotate(0.0deg) }
+  100% { transform: rotate(0.0deg) }
+}
+.animate-wave {
+  animation: wave 2s infinite;
+  display: inline-block;
+  transform-origin: 70% 70%;
+}
+`;
+if (typeof document !== "undefined" && !document.getElementById("dashboard-wave-animation")) {
+  style.id = "dashboard-wave-animation";
+  document.head.appendChild(style);
+}
+import CountUp from 'react-countup';
+import { useSwipeable } from "react-swipeable";
+import { motion, AnimatePresence } from "framer-motion";
+const agents = [
+  {
+    title: "Autofill Agent",
+    icon: "🧠",
+    desc: "Apply with saved data",
+    key: "autofill",
+    description: "Automatically fills application forms using your saved details."
+  },
+  {
+    title: "Resume-to-JD Score Agent",
+    icon: "📊",
+    desc: "See match score",
+    key: "score",
+    description: "Compares your resume against job descriptions for match quality."
+  },
+  {
+    title: "Tailored Answer Agent",
+    icon: "✍️",
+    desc: "Generate answers",
+    key: "answer",
+    description: "Creates personalized responses for job application questions."
+  }
+];
 // Inline style for AI badge
 const aiBadgeStyle = {
   backgroundColor: '#d4f4ff',
@@ -18,14 +70,15 @@ function TypingText({ text }) {
 
   useEffect(() => {
     let index = 0;
+    setDisplayed(""); // Reset on text change
     const interval = setInterval(() => {
-      if (index < text.length) {
+      if (index < (text?.length || 0)) {
         setDisplayed((prev) => prev + text[index]);
         index++;
       } else {
         clearInterval(interval);
       }
-    }, 20); // adjust speed as needed
+    }, 70); // slower typing speed
     return () => clearInterval(interval);
   }, [text]);
 
@@ -33,6 +86,27 @@ function TypingText({ text }) {
 }
 
 export default function Dashboard() {
+  // User Testimonials - Animated Carousel State
+  const testimonials = [
+    { text: "“Got an interview thanks to the Tailored Answer Agent!” – Aman", rating: 5 },
+    { text: "“Autofill saved me hours. Amazing!” – Priya", rating: 4 },
+    { text: "“This tool helped me target the right roles!” – Sarah", rating: 5 },
+    { text: "“The resume scoring really boosted my confidence.” – David", rating: 3 },
+    { text: "“The dashboard is clean and intuitive. Loved the layout!” – Arjun", rating: 4 },
+    { text: "“I applied to 10 jobs in one evening using this tool!” – Nisha", rating: 5 },
+    { text: "“Tailored answers were so on point, recruiters responded fast.” – Omar", rating: 4 },
+    { text: "“I was skeptical but it actually worked. Great job team!” – Meera", rating: 5 },
+    { text: "“Resume analyzer highlighted exactly what I was missing.” – Kevin", rating: 4 },
+    { text: "“AI suggestions felt personal and relevant. Impressed.” – Anjali", rating: 5 }
+  ];
+  const [activityIndex, setActivityIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActivityIndex((prev) => (prev + 1) % testimonials.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
   const [user, setUser] = useState(null);
   const [showInfo, setShowInfo] = useState({});
   const [suggestedJobs, setSuggestedJobs] = useState([]);
@@ -199,6 +273,33 @@ useEffect(() => {
     setShowInfo((prev) => ({ ...prev, [agent]: !prev[agent] }));
   };
 
+  // Carousel logic for Features cards
+  const carouselRef = useRef();
+  const [currentCard, setCurrentCard] = useState(0);
+
+  // Swipe handlers for Features carousel
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => setCurrentCard((prev) => (prev + 1) % agents.length),
+    onSwipedRight: () => setCurrentCard((prev) => (prev - 1 + agents.length) % agents.length),
+    trackMouse: true,
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentCard((prev) => (prev + 1) % 3);
+    }, 7000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollTo({
+        left: currentCard * 300,
+        behavior: "smooth"
+      });
+    }
+  }, [currentCard]);
+
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
@@ -222,86 +323,33 @@ useEffect(() => {
     };
   }, [selectedJob]);
 
-  if (!userId) return <div className="p-8">Please sign in again. Missing user ID.</div>;
+  if (!userId) return <div className="p-8">Please sign In.</div>;
   if (!user) return <div className="p-8">Sign-In or Sign-Up To View DashBoard!!...</div>;
 
 return (
-    <div className="min-h-screen bg-gray-50 p-6 space-y-8 text-gray-800 leading-relaxed tracking-wide">
+    <div
+      className="min-h-screen p-6 space-y-8 text-gray-800 leading-relaxed tracking-wide"
+      style={{ backgroundColor: '#FFFDF3' }}
+    >
       {/* Header */}
       <div className="flex justify-between items-center border-b pb-4">
-        <h2 className="text-2xl font-bold">Welcome back, {user?.name?.split(" ")[0]} 👋</h2>
-      </div>
-
-      {/* Agent Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        {[
-          { title: "Autofill Agent", icon: "🧠", desc: "Apply with saved data", key: "autofill" },
-          { title: "Resume-to-JD Score Agent", icon: "📊", desc: "See match score", key: "score" },
-          { title: "Tailored Answer Agent", icon: "✍️", desc: "Generate answers", key: "answer" }
-        ].map((agent) => (
-          <div
-            key={agent.key}
-            className="bg-white p-5 rounded-2xl shadow-md border hover:shadow-lg hover:scale-105 transition duration-300 ease-in-out"
+        <h2 className="text-2xl font-bold border-b border-gray-200 pb-2 mb-2 flex items-center gap-2">
+          Welcome Back, {user?.name?.split(" ")[0]}
+          <span
+            className="animate-wave inline-block origin-bottom"
+            role="img"
+            aria-label="waving hand"
           >
-            <h3 className="text-lg font-semibold">{agent.icon} {agent.title}</h3>
-            <p className="text-sm mt-2 text-gray-600">{agent.desc}</p>
-            <button
-              className="mt-3 text-indigo-600 hover:underline"
-              onClick={() => toggleLearnMore(agent.key)}
-            >
-              Learn more
-            </button>
-            {showInfo[agent.key] && (
-              <TypingText
-                text={
-                  agent.key === "autofill"
-                    ? "Automatically fills application forms using your saved details."
-                    : agent.key === "score"
-                    ? "Compares your resume against job descriptions for match quality."
-                    : "Creates personalized responses for job application questions."
-                }
-              />
-            )}
-          </div>
-        ))}
+            👋
+          </span>
+        </h2>
       </div>
 
-      {/* Main Layout: Applications + Suggested Jobs */}
-      <div className="grid grid-cols-3 gap-4 mt-6">
-        {/* Applications */}
-        <div className="col-span-2 bg-white p-4 rounded shadow">
-          <h2 className="text-xl font-semibold mb-4">📊 Application Tracker</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm text-left text-gray-700">
-              <thead className="text-xs text-gray-500 uppercase bg-gray-100">
-                <tr>
-                  <th scope="col" className="px-4 py-2">Job Title</th>
-                  <th scope="col" className="px-4 py-2">Company</th>
-                  <th scope="col" className="px-4 py-2">Date Applied</th>
-                  <th scope="col" className="px-4 py-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {user?.applications?.map((app, idx) => (
-                  <tr key={idx} className="bg-white border-b">
-                    <td className="px-4 py-2">{app.title}</td>
-                    <td className="px-4 py-2">{app.company}</td>
-                    <td className="px-4 py-2">{new Date(app.createdAt).toLocaleDateString()}</td>
-                    <td className="px-4 py-2 text-green-600">
-                      ✅ Applied
-                      <progress value="100" max="100" className="w-full h-2 rounded bg-gray-200 text-green-600 mt-1" />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Suggested Jobs */}
-        <div className="bg-white p-4 rounded shadow">
+      {/* Suggested Jobs - moved to top and full width */}
+      <div className="w-full">
+        <div className="bg-[#FFFCF2] rounded-xl p-4 mb-6">
           <div className="flex justify-between items-center mb-2">
-            <h2 className="text-xl font-semibold">💼 Suggested Jobs</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">💼 Suggested Jobs</h2>
             <button
               onClick={() => {
                 if (refreshCooldown === 0) {
@@ -320,8 +368,8 @@ return (
             <p>No job suggestions yet.</p>
           ) : (
             <>
-              <p className="text-xs text-green-600">Showing {suggestedJobs.length} suggested and {normalJobs.length} normal jobs</p>
-              <ul className="max-h-[500px] overflow-y-auto space-y-3 text-sm text-gray-700 list-none pl-0">
+              <p className="text-base text-green-600">Showing {suggestedJobs.length} suggested and {normalJobs.length} normal jobs</p>
+              <ul className="max-h-[500px] overflow-y-auto space-y-3 text-base text-gray-700 list-none pl-0">
                 {console.log("👁️ Rendering suggestedJobs:", suggestedJobs)}
                 {suggestedJobs.map((job, index) => {
                   // Skip undefined or empty jobs
@@ -340,7 +388,13 @@ return (
                   return (
                     <li
                       key={index}
-                      className="p-3 border rounded hover:bg-gray-50 cursor-pointer"
+                      className={`transition hover:scale-[1.01] border border-gray-200 rounded-lg p-4 cursor-pointer text-base ${
+                        job.matchScore >= 80
+                          ? "bg-green-50 hover:border-indigo-400"
+                          : job.matchScore >= 50
+                          ? "bg-yellow-50 hover:border-indigo-400"
+                          : "bg-red-50 hover:border-indigo-400"
+                      }`}
                       onClick={() => setSelectedJob(job)}
                     >
                       <div className="flex justify-between items-start">
@@ -405,7 +459,7 @@ return (
                 {normalJobs.map((job, index) => (
                   <li
                     key={`normal-${index}`}
-                    className="p-3 border rounded hover:bg-gray-50 cursor-pointer"
+                    className="transition hover:scale-[1.01] border border-gray-200 rounded-lg p-4 hover:border-indigo-400 cursor-pointer text-base"
                     onClick={() => setSelectedJob(job)}
                   >
                     <div className="flex justify-between items-start">
@@ -434,6 +488,158 @@ return (
           )}
         </div>
       </div>
+
+      {/* Divider */}
+      <div className="border-t border-gray-200 my-6"></div>
+
+      {/* Application Tracker - animated and moved above agent cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="bg-[#FFFCF2] p-4 rounded-xl"
+      >
+        <h2 className="text-xl font-semibold text-gray-800 mb-2">📊 Application Tracker</h2>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm text-left text-gray-700">
+            <thead className="text-xs text-gray-500 uppercase bg-gray-100">
+              <tr>
+                <th scope="col" className="px-4 py-2">Job Title</th>
+                <th scope="col" className="px-4 py-2">Company</th>
+                <th scope="col" className="px-4 py-2">Date Applied</th>
+                <th scope="col" className="px-4 py-2">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {user?.applications?.map((app, idx) => (
+                <tr key={idx} className="bg-white border-b">
+                  <td className="px-4 py-2">{app.title}</td>
+                  <td className="px-4 py-2">{app.company}</td>
+                  <td className="px-4 py-2">{new Date(app.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-2 text-green-600">
+                    ✅ Applied
+                    <progress value="100" max="100" className="w-full h-2 rounded bg-gray-200 text-green-600 mt-1" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
+
+      {/* Divider */}
+      <div className="border-t border-gray-200 my-6"></div>
+
+      {/* Swipeable Agent Cards - improved Features section */}
+      <div className="mb-6 w-full">
+        <div className="bg-[#FFFCF2] rounded-xl p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">✨ Key Features</h2>
+            <div className="flex gap-2">
+              <button
+                className="text-gray-500 hover:text-indigo-600 transition"
+                onClick={() => setCurrentCard((prev) => (prev - 1 + agents.length) % agents.length)}
+              >
+                ◀
+              </button>
+              <button
+                className="text-gray-500 hover:text-indigo-600 transition"
+                onClick={() => setCurrentCard((prev) => (prev + 1) % agents.length)}
+              >
+                ▶
+              </button>
+            </div>
+          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentCard}
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -40 }}
+              transition={{ duration: 0.6 }}
+              className="border rounded-lg p-6 bg-[#FFFAEE] w-full"
+              {...swipeHandlers}
+            >
+              <h3 className="text-xl font-semibold mb-1">{agents[currentCard].icon} {agents[currentCard].title}</h3>
+              <p className="text-sm text-indigo-700">{agents[currentCard].desc}</p>
+              <TypingText text={agents[currentCard].description} />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-gray-200 my-6"></div>
+
+      {/* Platform Growth Stats */}
+      <div className="bg-[#FFFCF2] p-4 mt-6 rounded-xl text-center">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2 flex justify-center items-center gap-2">
+          <div className="w-8 h-8">
+            <Lottie animationData={rocketAnimation} loop autoplay />
+          </div>
+          Platform Growth
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+          {[
+            { label: "Jobs Analyzed", end: 12000 },
+            { label: "Resumes Scored", end: 3400 },
+            { label: "Autofill Apps", end: 980 },
+            { label: "Users Helped", end: 542 }
+          ].map(({ label, end }) => (
+            <div key={label}>
+              <p className="text-4xl font-bold text-indigo-600">
+                <CountUp
+                  end={end}
+                  duration={2.5}
+                  easingFn={(t, b, c, d) => {
+                    const ts = (t /= d) * t;
+                    const tc = ts * t;
+                    return b + c * (tc + -3 * ts + 3 * t);
+                  }}
+                />
+              </p>
+              <p className="text-sm text-gray-600">{label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-gray-200 my-6"></div>
+
+      {/* Live Activity Feed (Dynamic Rotating) */}
+      <div className="bg-[#FFFCF2] rounded-xl p-4">
+        <LiveActivityFeed />
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-gray-200 my-6"></div>
+
+      {/* User Testimonials - Animated Carousel */}
+      <div className="bg-[#FFFCF2] p-4 mt-6 rounded-xl">
+        <h2 className="text-xl font-semibold text-gray-800 mb-2 text-center">💬 What Users Say</h2>
+        {/* Responsive grid of 2 testimonials at once */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {testimonials.slice(activityIndex, activityIndex + 2).map((testimonial, idx) => (
+            <div key={idx} className="bg-[#FEF8EC] rounded-lg p-4 border border-yellow-200 text-sm text-gray-700 flex flex-col items-center">
+              <p className="mb-2 italic text-center">{testimonial.text}</p>
+              <div className="flex gap-1 text-yellow-400 text-lg mb-1">
+                {Array.from({ length: testimonial.rating }).map((_, i) => (
+                  <span key={i}>⭐</span>
+                ))}
+                {Array.from({ length: 5 - testimonial.rating }).map((_, i) => (
+                  <span key={i}>☆</span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer Summary Stats */}
+      <footer className="text-center text-sm text-gray-500 mt-10">
+        🔢 3,421 users | 18,765 applications | 120,430 AI prompts generated
+      </footer>
     {/* Modal for selected job */}
     {selectedJob && (
       <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center animate-fadeIn">
@@ -524,6 +730,34 @@ return (
         </div>
       </div>
     )}
+    </div>
+  );
+}
+// Live Activity Feed component (dynamic rotating messages)
+function LiveActivityFeed() {
+  const [activityIndex, setActivityIndex] = useState(0);
+  const activities = [
+    "🎉 Alice just applied to Google",
+    "💼 John used Tailored Answer Agent for Amazon",
+    "🚀 Raj scored his resume for Microsoft",
+    "✍️ Emma generated a cover letter using AI",
+    "📈 Priya saw a 50% increase in interview calls",
+    "🔍 Aditya used JD Score Agent for a Meta role"
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActivityIndex((prev) => (prev + 1) % activities.length);
+    }, 1000); // 1 second per activity (change as needed)
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div>
+      <h2 className="text-xl font-semibold text-gray-800 mb-2">🔥 Live Activity</h2>
+      <div className="bg-orange-50 text-orange-700 px-4 py-2 rounded-full w-fit mx-auto text-sm">
+        {activities[activityIndex]}
+      </div>
     </div>
   );
 }
