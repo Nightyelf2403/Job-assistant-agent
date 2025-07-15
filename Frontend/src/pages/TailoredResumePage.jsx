@@ -191,6 +191,16 @@ useEffect(() => {
       setMatchScore(res.data.score);
       setScoreReasons(res.data.points);
 
+      if (res.data.insights) {
+        setScoreReasons(prev => [...prev, ...res.data.insights.map(insight => `💡 ${insight}`)]);
+      }
+      if (res.data.missingSkills && res.data.missingSkills.length > 0) {
+        setScoreReasons(prev => [...prev, `🚫 Missing Skills: ${res.data.missingSkills.join(", ")}`]);
+      }
+      if (res.data.reasoning) {
+        setScoreReasons(prev => [...prev, `🧠 Explanation: ${res.data.reasoning}`]);
+      }
+
       // Optional: trigger confetti if score > 80
       // if (res.data.score > 80) {
       //   import('canvas-confetti').then(({ default: confetti }) => {

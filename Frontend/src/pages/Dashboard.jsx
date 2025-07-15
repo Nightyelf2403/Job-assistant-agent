@@ -113,6 +113,7 @@ export default function Dashboard() {
   const [normalJobs, setNormalJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [selectedApplication, setSelectedApplication] = useState(null);
   const [refreshCooldown, setRefreshCooldown] = useState(0);
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId");
@@ -306,22 +307,22 @@ useEffect(() => {
     navigate("/signin");
   };
 
-  // Add useEffect to listen for Escape key to close modal
+  // Add useEffect to listen for Escape key to close modals
   useEffect(() => {
     function handleEsc(event) {
       if (event.key === "Escape") {
         setSelectedJob(null);
+        setSelectedApplication(null);
       }
     }
-
-    if (selectedJob) {
+    if (selectedJob || selectedApplication) {
       document.addEventListener("keydown", handleEsc);
     }
-
     return () => {
       document.removeEventListener("keydown", handleEsc);
     };
-  }, [selectedJob]);
+  }, [selectedJob, selectedApplication]);
+
 
   if (!userId) return <div className="p-8">Please sign In.</div>;
   if (!user) return <div className="p-8">Sign-In or Sign-Up To View DashBoard!!...</div>;
@@ -511,14 +512,26 @@ return (
               </tr>
             </thead>
             <tbody>
-              {[...new Map(user?.applications?.map(app => [`${app.jobTitle}-${app.company}`, app])).values()].map((app, idx) => (
-                <tr key={idx} className="bg-white border-b">
+              {[...new Map(
+                (user?.applications || [])
+                  .filter(app => ['submitted', 'applied'].includes(app.status))
+                  .map(app => [`${app.jobTitle}-${app.company}`, app])
+              ).values()].map((app, idx) => (
+                <tr
+                  key={idx}
+                  className="bg-white border-b cursor-pointer hover:bg-indigo-50"
+                  onClick={() => setSelectedApplication(app)}
+                >
                   <td className="px-4 py-2">{app.jobTitle || app.title}</td>
                   <td className="px-4 py-2">{app.company}</td>
                   <td className="px-4 py-2">{new Date(app.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-2 text-green-600">
-                    ✅ Applied
-                    <progress value="100" max="100" className="w-full h-2 rounded bg-gray-200 text-green-600 mt-1" />
+                    {app.status === 'in-progress' ? '⏳ In Progress' : '✅ Applied'}
+                    <progress
+                      value={app.status === 'in-progress' ? 50 : 100}
+                      max="100"
+                      className="w-full h-2 rounded bg-gray-200 text-green-600 mt-1"
+                    />
                   </td>
                 </tr>
               ))}
@@ -726,6 +739,39 @@ return (
             >
               Apply via Autofill
             </button>
+          </div>
+        </div>
+      </div>
+    )}
+    {/* Modal for selected application in Application Tracker */}
+    {selectedApplication && (
+      <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center animate-fadeIn">
+        <div className="bg-white max-w-2xl w-full p-6 rounded-lg shadow-lg overflow-y-auto max-h-[90vh] relative">
+          <button
+            className="absolute top-2 right-2 text-gray-600 hover:text-black text-xl font-bold"
+            onClick={() => setSelectedApplication(null)}
+          >
+            ✕
+          </button>
+          <h2 className="text-2xl font-bold mb-2">{selectedApplication.jobTitle || selectedApplication.title}</h2>
+          <p className="text-gray-700 mb-1"><strong>Company:</strong> {selectedApplication.company}</p>
+          <p className="text-gray-700 mb-1"><strong>Location:</strong> {selectedApplication.location || "N/A"}</p>
+          <p className="text-gray-700 mb-1"><strong>Date Applied:</strong> {new Date(selectedApplication.createdAt).toLocaleDateString()}</p>
+          <p className="text-gray-700 mb-1 whitespace-pre-line"><strong>Cover Letter:</strong><br />{selectedApplication.coverLetter || "N/A"}</p>
+          <div className="mt-4">
+            <h3 className="font-semibold mb-2">Answers</h3>
+            {selectedApplication.answers && selectedApplication.answers.length > 0 ? (
+              <ul className="space-y-2 text-sm text-gray-700">
+                {selectedApplication.answers.map((a, i) => (
+                  <li key={i}>
+                    <p><strong>Q{i + 1}:</strong> {a.question}</p>
+                    <p><strong>A:</strong> {a.answer}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No answers submitted.</p>
+            )}
           </div>
         </div>
       </div>

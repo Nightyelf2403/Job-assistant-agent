@@ -88,14 +88,18 @@ exports.analyzeResume = async (req, res) => {
       {
         role: 'user',
         content: `
-Given the resume and job description below, provide:
+Given the resume and job description below, provide a comprehensive analysis including:
 1. A match score from 0–100
-2. 3 short insights on how to improve
+2. 5 short and actionable insights on how to improve the resume for this job
+3. A list of missing skills or experiences that are important for the job but not evident in the resume
+4. A brief summary (2-3 sentences) explaining why the resume scored as it did
 
 Respond ONLY in this JSON format:
 {
   "matchScore": <number>,
-  "insights": ["...", "...", "..."]
+  "insights": ["...", "...", "...", "...", "..."],
+  "missing": ["...", "...", "..."],
+  "summary": "..."
 }
 
 Resume:

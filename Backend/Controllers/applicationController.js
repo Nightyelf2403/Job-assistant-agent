@@ -22,7 +22,7 @@ const autofillApplication = async (req, res) => {
         jobTitle: job.title,
         company: job.company,
         location: job.location,
-        status: 'applied',
+        status: 'in-progress',
         dateApplied: new Date()
       }
     });
@@ -39,10 +39,10 @@ const autofillApplication = async (req, res) => {
       await transporter.sendMail({
         from: `"Job Assistant" <${process.env.EMAIL_USER}>`,
         to: user.email,
-        subject: `✅ Application Submitted: ${job.title} at ${job.company}`,
+        subject: `📝 Application Started (Not Yet Submitted): ${job.title} at ${job.company}`,
         html: `
           <p>Hi ${user.name || "there"},</p>
-          <p>You have successfully submitted your application using Autofill Agent!</p>
+          <p>You have started an application using Autofill Agent. Don't forget to review and submit it!</p>
           <h3>🧾 Application Details</h3>
           <ul>
             <li><strong>Job Title:</strong> ${job.title}</li>
