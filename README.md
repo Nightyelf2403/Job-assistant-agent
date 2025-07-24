@@ -30,7 +30,7 @@ An AI-powered job application assistant that helps users apply smarter and faste
 | ✅ Tailored Answers       | Completed  | Yes        |
 | ✅ Cover Letter Generator | Completed  | Yes        |
 | 🟡 External Form Submit   | Pending    | Soon       |
-| ✅ Application Tracker    | Completed  | Yes        |
+| 🟡 Application Tracker    | Pending    | Soon       |
 
 - Multi-step user profile form (resume, preferences, skills)
 - Job suggestions from JSearch API + AI filtering
