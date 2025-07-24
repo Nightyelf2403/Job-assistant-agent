@@ -11,7 +11,7 @@ const {
   getAllUsers,
   getCurrentUser,
   extractResumeForUser,
-} = require('../controllers/userController');
+} = require('../Controllers/userController');
 
 // Set up Multer for file uploads (e.g., resume)
 const storage = multer.diskStorage({

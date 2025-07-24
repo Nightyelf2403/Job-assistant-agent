@@ -10,7 +10,7 @@ const {
   scoreResumeAgainstJD,
   askAIQuestion,
   startAutofillApplication,
-} = require('../controllers/agentController');
+} = require('../Controllers/agentController');
 
 const router = express.Router();
 
