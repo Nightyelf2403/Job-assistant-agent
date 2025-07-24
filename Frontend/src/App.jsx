@@ -10,11 +10,11 @@ import TermsPage from './pages/TermsPage.jsx';
 import FAQPage from './pages/FAQPage.jsx';
 import AboutPage from './pages/AboutPage.jsx';
 
-import SignIn from './components/SignIn.jsx';
+import SignIn from './Components/SignIn.jsx';
 import SignUp from './Components/SignUp.jsx';
 import MultiStepform from './Components/MultiStepform.jsx';
-import ResumeMatchTool from './components/ResumeMatchTool.jsx';
-import TailoredAnswerGenerator from './components/TailoredAnswerGenerator.jsx';
+import ResumeMatchTool from './Components/ResumeMatchTool.jsx';
+import TailoredAnswerGenerator from './Components/TailoredAnswerGenerator.jsx';
 import JobTracker from './Components/JobTracker.jsx';
 import AutoFillApplication from './Components/AutoFillApplication.jsx';
 import TailoredResumePage from './pages/TailoredResumePage';
