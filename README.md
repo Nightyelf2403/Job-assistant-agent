@@ -11,16 +11,6 @@ An AI-powered job application assistant that helps users apply smarter and faste
 
 ---
 
-## 📚 Table of Contents
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Screenshots](#-screenshots)
-- [Setup Guide](#-how-to-set-up-locally)
-- [Folder Structure](#-folder-structure)
-- [Future Enhancements](#-future-enhancements)
-
----
-
 ## 🚀 Features
 
 | Feature                    | Status     | AI-Powered |
