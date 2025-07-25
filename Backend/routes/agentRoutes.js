@@ -22,6 +22,7 @@ router.post('/generate/recruiter-answers', generateRecruiterAnswers);
 router.post('/generate/score', authenticateToken, scoreResumeAgainstJD);
 router.post('/generate/ask', authenticateToken, askAIQuestion);
 router.post('/autofill-start', startAutofillApplication);
+router.post("/generate/autofill-answers", agentController.generateAutofillAnswers);
 console.log('✅ /api/generate/score route loaded');
 console.log('✅ /api/generate/ask route loaded');
 
