@@ -541,6 +541,76 @@ exports.startAutofillApplication = async (req, res) => {
   }
 };
 
+
+exports.generateAutofillAnswers = async (req, res) => {
+  const { userId, questions } = req.body;
+
+  if (!userId || !questions || !Array.isArray(questions)) {
+    return res.status(400).json({ error: "Invalid input data" });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const resumeText = user.resumeText || "";
+
+    const prompt = `
+You are an AI assistant helping fill job application forms.
+Given the following resume and user profile, generate short, relevant answers to each question.
+
+Resume:
+${resumeText}
+
+Profile:
+Preferred Locations: ${user.preferredLocations?.join(", ") || "N/A"}
+Skills: ${user.skills?.join(", ") || "N/A"}
+Work Preference: ${user.workPreference?.join(", ") || "N/A"}
+Desired Position: ${user.desiredPosition || "N/A"}
+Job Type: ${user.jobType || "N/A"}
+Certifications: ${user.certifications || "N/A"}
+
+Questions:
+${questions.map((q, i) => `${i + 1}. ${q}`).join("\n")}
+
+Respond ONLY as a JSON array of answers:
+["Answer 1", "Answer 2", ...]
+    `;
+
+    const aiResponse = await axios.post(
+      "https://adihub3504002192.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview",
+      {
+        messages: [
+          { role: "system", content: "You are an AI job application assistant." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 800,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": process.env.AZURE_OPENAI_KEY,
+        }
+      }
+    );
+
+    const text = aiResponse.data?.choices?.[0]?.message?.content || "[]";
+    const answers = JSON.parse(text);
+
+    return res.json({ answers });
+  } catch (err) {
+    console.error("AI Autofill Error:", err.message);
+    return res.status(500).json({ error: "Failed to generate answers" });
+  }
+};
+
+
 // Ensure all controller functions are exported for route setup
 module.exports = {
   generateAnswer: exports.generateAnswer,
@@ -550,5 +620,6 @@ module.exports = {
   scoreResumeAgainstJD: exports.scoreResumeAgainstJD,
   askAIQuestion: exports.askAIQuestion,
   startAutofillApplication: exports.startAutofillApplication,
+  generateAutofillAnswers: exports.generateAutofillAnswers
   
 };
